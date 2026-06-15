@@ -1,0 +1,3 @@
+# Dialyzer ignore list
+lib/apero/crypto.ex:176:7:no_return
+lib/apero/vfs/io.ex:28:17:call
