@@ -3,7 +3,7 @@ defmodule Apero.FacadeTest do
 
   describe "Apero facade" do
     test "os_type returns a known atom" do
-      assert Apero.os_type() in [:linux, :darwin, :windows, :freebsd, :unknown]
+      assert Apero.os_type() in [:linux, :macos, :windows, :unknown]
     end
 
     test "os_arch returns a string" do
