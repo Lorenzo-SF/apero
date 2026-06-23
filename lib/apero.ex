@@ -40,4 +40,22 @@ defmodule Apero do
 
   - `Apero.Cache` — unified cache interface with ETS adapter
   """
+
+  # Crypto
+  defdelegate encrypt(plaintext, key \\ nil), to: Apero.Crypto
+  defdelegate decrypt(encoded, key), to: Apero.Crypto
+  defdelegate sha256(data), to: Apero.Crypto
+  defdelegate sha512(data), to: Apero.Crypto
+  defdelegate md5(data), to: Apero.Crypto
+
+  # Env
+  defdelegate get_env(key, default \\ nil), to: Apero.Env, as: :get
+  defdelegate put_env(key, value), to: Apero.Env, as: :put
+
+  # OS
+  defdelegate os_type(), to: Apero.OS, as: :type
+  defdelegate os_arch(), to: Apero.OS, as: :arch
+
+  # Retry
+  defdelegate retry(fun, opts \\ []), to: Apero.Retry, as: :with
 end

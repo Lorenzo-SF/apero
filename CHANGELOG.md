@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md.
 
 ### Changed
+- **i18n**: documented the existing English-only public surface under Project history and linked the 1.0.0 release to hex.pm.
 - **Apero.VFS deleted** — full duplication of Apero.File. The `Apero.File` namespace is now canonical; `Apero.VFS.*` references were removed from `mix.exs` docs.
 - `Apero.Application` now starts `Apero.Cache.Supervisor` (the previous VFS Registry is gone).
 - `Apero.Git` and `Apero.Crypto` facades now have `@deprecated` markers on all functions that delegate to the new submodules; tests still use the facades (with warnings).
@@ -29,4 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-06-10
 
 ### Added
-- Initial release: file operations, Git, Docker, env, conf, OS, proc, cache, compress.
+- Initial open source release: file operations, Git, Docker, env, conf, OS, proc, cache, compress.
+
+[1.0.0]: https://hex.pm/packages/apero/1.0.0

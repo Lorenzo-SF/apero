@@ -34,6 +34,64 @@ defmodule Apero.Retry do
     do_retry(fun, 1, max_attempts, base_delay, max_delay, should_retry?, on_retry)
   end
 
+  @doc """
+  Non-blocking variant of `with/2` that uses `Process.send_after` between
+  attempts instead of `Process.sleep`.
+
+  ## Caveats
+
+  Because the retry is driven by the calling process's mailbox, this
+  helper must be called from a process that can receive messages
+  (typically a GenServer). The calling process should be ready to
+  receive the `{:apero_retry_continue, fun, state}` message; in practice
+  this helper is best used from a custom `handle_info/2` that calls
+  the next attempt and sends itself another message after the delay.
+
+  Most consumers should prefer the simpler `with/2` (which uses
+  `Process.sleep`) unless they are calling from a GenServer mailbox
+  loop.
+  """
+  @spec schedule_next((-> any()), integer(), integer(), integer(), integer(),
+                        (any() -> boolean()), (-> any())) :: :ok
+  def schedule_next(fun, attempt, max, base, max_d, should_retry?, on_retry) do
+    if attempt < max do
+      delay = calculate_delay(attempt, base, max_d)
+      on_retry.(%{attempt: attempt, delay: delay})
+      Process.send_after(self(), {:apero_retry, fun, attempt + 1, max, base, max_d, should_retry?, on_retry}, delay)
+      :ok
+    else
+      :ok
+    end
+  end
+
+  @doc """
+  Handles a `{:apero_retry, ...}` message produced by `schedule_next/7`.
+  Runs the next attempt; if it succeeds or exhausts retries, returns the
+  result via `{:apero_retry_done, result}`. Otherwise schedules the
+  next retry.
+
+  This is the GenServer hook for non-blocking retry.
+  """
+  @spec handle_message({:apero_retry, (-> any()), integer(), integer(), integer(),
+                         integer(), (any() -> boolean()), (-> any())}) :: any()
+  def handle_message({:apero_retry, fun, attempt, max, base, max_d, should_retry?, on_retry}) do
+    result = fun.()
+
+    cond do
+      not should_retry?.(result) ->
+        {:apero_retry_done, result}
+
+      attempt >= max ->
+        {:apero_retry_done, result}
+
+      true ->
+        delay = calculate_delay(attempt, base, max_d)
+        on_retry.(%{attempt: attempt, result: result, delay: delay})
+        Process.send_after(self(), {:apero_retry, fun, attempt + 1, max, base, max_d, should_retry?, on_retry}, delay)
+        {:apero_retry_pending, attempt + 1}
+    end
+  end
+
   defp do_retry(fun, attempt, max, base, max_d, should_retry?, on_retry) do
     result = fun.()
 
