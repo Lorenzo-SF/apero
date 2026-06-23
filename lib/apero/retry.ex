@@ -51,7 +51,7 @@ defmodule Apero.Retry do
   `Process.sleep`) unless they are calling from a GenServer mailbox
   loop.
   """
-  @spec schedule_next((-> any()), non_neg_integer(), non_neg_integer(), non_neg_integer(),
+  @spec schedule_next((-> any()), integer(), integer(), integer(), integer(),
                         (any() -> boolean()), (-> any())) :: :ok
   def schedule_next(fun, attempt, max, base, max_d, should_retry?, on_retry) do
     if attempt < max do
@@ -72,8 +72,8 @@ defmodule Apero.Retry do
 
   This is the GenServer hook for non-blocking retry.
   """
-  @spec handle_message({:apero_retry, (-> any()), non_neg_integer(), non_neg_integer(),
-                         non_neg_integer(), (any() -> boolean()), (-> any())}) :: any()
+  @spec handle_message({:apero_retry, (-> any()), integer(), integer(), integer(),
+                         integer(), (any() -> boolean()), (-> any())}) :: any()
   def handle_message({:apero_retry, fun, attempt, max, base, max_d, should_retry?, on_retry}) do
     result = fun.()
 
