@@ -6,8 +6,8 @@ defmodule Apero.FacadeTest do
       assert Apero.os_type() in [:linux, :macos, :windows, :unknown]
     end
 
-    test "os_arch returns a string" do
-      assert is_binary(Apero.os_arch())
+    test "os_arch returns an atom" do
+      assert Apero.os_arch() in [:x86_64, :arm64, :arm, :i386, :unknown]
     end
 
     test "sha256 returns a 64-char hex string" do
