@@ -64,7 +64,7 @@ defmodule Apero.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "docs/README.es.md", "LICENSE.md"], 
+      extras: ["README.md", "docs/README.es.md", "LICENSE.md"],
       groups_for_modules: [
         Core: [
           Apero,
