@@ -10,7 +10,7 @@ defmodule Apero.MixProject do
       deps: deps(),
       name: "Apero",
       description:
-        "Comprehensive utility library for Elixir — file operations, Git, Docker/Podman, cryptography, env files, config files, OS detection, and processes.",
+        "Comprehensive utility library for Elixir - file operations, Git, Docker/Podman, cryptography, env files, config files, OS detection, and processes.",
       source_url: "https://github.com/Lorenzo-SF/apero",
       homepage_url: "https://github.com/Lorenzo-SF/apero",
       package: [
@@ -64,7 +64,7 @@ defmodule Apero.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "README_ES.md", "LICENSE.md"],
+      extras: ["README.md", "docs/README.es.md", "LICENSE.md"], 
       groups_for_modules: [
         Core: [
           Apero,
@@ -98,6 +98,7 @@ defmodule Apero.MixProject do
       source_url: "https://github.com/Lorenzo-SF/apero",
       homepage_url: "https://github.com/Lorenzo-SF/apero"
     ]
+      source_ref: "v0.1.0",
   end
 
   defp dialyzer_config do
