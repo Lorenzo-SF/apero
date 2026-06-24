@@ -10,7 +10,7 @@ A utility library for Elixir covering file operations, Git management, Docker/Po
 ```elixir
 def deps do
   [
-    {:apero, path: "../apero"}
+    apero, github: "Lorenzo-SF/apero"}
   ]
 end
 ```
