@@ -12,7 +12,7 @@ Apero es una librería de utilidades para Elixir que cubre operaciones de ficher
 ```elixir
 def deps do
   [
-    {:apero, path: "../apero"}
+    {:apero, github: "Lorenzo-SF/apero"}
   ]
 end
 ```
