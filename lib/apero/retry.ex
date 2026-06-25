@@ -51,13 +51,26 @@ defmodule Apero.Retry do
   `Process.sleep`) unless they are calling from a GenServer mailbox
   loop.
   """
-  @spec schedule_next((-> any()), integer(), integer(), integer(), integer(),
-                        (any() -> boolean()), (-> any())) :: :ok
+  @spec schedule_next(
+          (-> any()),
+          integer(),
+          integer(),
+          integer(),
+          integer(),
+          (any() -> boolean()),
+          (-> any())
+        ) :: :ok
   def schedule_next(fun, attempt, max, base, max_d, should_retry?, on_retry) do
     if attempt < max do
       delay = calculate_delay(attempt, base, max_d)
       on_retry.(%{attempt: attempt, delay: delay})
-      Process.send_after(self(), {:apero_retry, fun, attempt + 1, max, base, max_d, should_retry?, on_retry}, delay)
+
+      Process.send_after(
+        self(),
+        {:apero_retry, fun, attempt + 1, max, base, max_d, should_retry?, on_retry},
+        delay
+      )
+
       :ok
     else
       :ok
@@ -72,8 +85,10 @@ defmodule Apero.Retry do
 
   This is the GenServer hook for non-blocking retry.
   """
-  @spec handle_message({:apero_retry, (-> any()), integer(), integer(), integer(),
-                         integer(), (any() -> boolean()), (-> any())}) :: any()
+  @spec handle_message(
+          {:apero_retry, (-> any()), integer(), integer(), integer(), integer(),
+           (any() -> boolean()), (-> any())}
+        ) :: any()
   def handle_message({:apero_retry, fun, attempt, max, base, max_d, should_retry?, on_retry}) do
     result = fun.()
 
@@ -87,7 +102,13 @@ defmodule Apero.Retry do
       true ->
         delay = calculate_delay(attempt, base, max_d)
         on_retry.(%{attempt: attempt, result: result, delay: delay})
-        Process.send_after(self(), {:apero_retry, fun, attempt + 1, max, base, max_d, should_retry?, on_retry}, delay)
+
+        Process.send_after(
+          self(),
+          {:apero_retry, fun, attempt + 1, max, base, max_d, should_retry?, on_retry},
+          delay
+        )
+
         {:apero_retry_pending, attempt + 1}
     end
   end
