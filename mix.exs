@@ -96,9 +96,9 @@ defmodule Apero.MixProject do
         Network: [Apero.Network, Apero.SSH, Apero.Kubernetes, Apero.Retry]
       ],
       source_url: "https://github.com/Lorenzo-SF/apero",
-      homepage_url: "https://github.com/Lorenzo-SF/apero"
+      homepage_url: "https://github.com/Lorenzo-SF/apero",
+      source_ref: "v0.1.0"
     ]
-      source_ref: "v0.1.0",
   end
 
   defp dialyzer_config do
