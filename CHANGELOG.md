@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-24
+
 ### Added
 - `Apero.Retry` — exponential backoff with jitter for retrying transient operations.
 - `Apero.Network` — ping, DNS resolve, TCP port checking, port scanning.
@@ -33,3 +35,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial open source release: file operations, Git, Docker, env, conf, OS, proc, cache, compress.
 
 [1.0.0]: https://hex.pm/packages/apero/1.0.0
+
+[0.2.0]: https://github.com/Lorenzo-SF/apero/releases/tag/v0.2.0
