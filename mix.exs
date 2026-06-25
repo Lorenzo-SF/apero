@@ -4,13 +4,13 @@ defmodule Apero.MixProject do
   def project do
     [
       app: :apero,
-      version: "1.0.0",
+      version: "0.2.0",
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       name: "Apero",
       description:
-        "Comprehensive utility library for Elixir — file operations, Git, Docker/Podman, cryptography, env files, config files, OS detection, and processes.",
+        "Comprehensive utility library for Elixir - file operations, Git, Docker/Podman, cryptography, env files, config files, OS detection, and processes.",
       source_url: "https://github.com/Lorenzo-SF/apero",
       homepage_url: "https://github.com/Lorenzo-SF/apero",
       package: [
@@ -64,7 +64,7 @@ defmodule Apero.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "README_ES.md", "LICENSE.md"],
+      extras: ["README.md", "docs/README.es.md", "LICENSE.md"], 
       groups_for_modules: [
         Core: [
           Apero,
@@ -96,7 +96,8 @@ defmodule Apero.MixProject do
         Network: [Apero.Network, Apero.SSH, Apero.Kubernetes, Apero.Retry]
       ],
       source_url: "https://github.com/Lorenzo-SF/apero",
-      homepage_url: "https://github.com/Lorenzo-SF/apero"
+      homepage_url: "https://github.com/Lorenzo-SF/apero",
+      source_ref: "v0.1.0"
     ]
   end
 
