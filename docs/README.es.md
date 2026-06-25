@@ -1,6 +1,6 @@
 # Apero
 
-[![version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
+[![version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
 
 Apero es una librería de utilidades para Elixir que cubre operaciones de ficheros, gestión de Git, contenedores Docker/Podman, criptografía, manejo de variables de entorno, ficheros de configuración, detección de SO y gestión de procesos.
