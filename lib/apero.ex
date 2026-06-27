@@ -42,11 +42,11 @@ defmodule Apero do
   """
 
   # Crypto
-  defdelegate encrypt(plaintext, key \\ nil), to: Apero.Crypto
-  defdelegate decrypt(encoded, key), to: Apero.Crypto
-  defdelegate sha256(data), to: Apero.Crypto
-  defdelegate sha512(data), to: Apero.Crypto
-  defdelegate md5(data), to: Apero.Crypto
+  defdelegate encrypt(plaintext, key \\ nil), to: Apero.Crypto.Cipher
+  defdelegate decrypt(encoded, key), to: Apero.Crypto.Cipher
+  defdelegate sha256(data), to: Apero.Crypto.Hash
+  defdelegate sha512(data), to: Apero.Crypto.Hash
+  defdelegate md5(data), to: Apero.Crypto.Hash
 
   # Env
   defdelegate get_env(key, default \\ nil), to: Apero.Env, as: :get

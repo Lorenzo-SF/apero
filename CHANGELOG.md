@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-27
+
+### Fixed
+- Deprecation warnings in `Apero` top-level facade delegates: redirect `encrypt/2`,
+  `decrypt/2` to `Apero.Crypto.Cipher` and `sha256/1`, `sha512/1`, `md5/1` to
+  `Apero.Crypto.Hash`.
+
 ## [0.2.0] - 2026-06-24
 
 ### Added
@@ -35,5 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial open source release: file operations, Git, Docker, env, conf, OS, proc, cache, compress.
 
 [1.0.0]: https://hex.pm/packages/apero/1.0.0
+
+[0.2.1]: https://github.com/Lorenzo-SF/apero/releases/tag/v0.2.1
 
 [0.2.0]: https://github.com/Lorenzo-SF/apero/releases/tag/v0.2.0
