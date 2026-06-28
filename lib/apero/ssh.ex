@@ -55,7 +55,17 @@ defmodule Apero.SSH do
   end
 
   defp build_ssh_args(key, port, user, host, command) do
-    base = ["-p", to_string(port), "-o", "BatchMode=yes", "#{user}@#{host}", command]
+    base = [
+      "-p",
+      to_string(port),
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "StrictHostKeyChecking=accept-new",
+      "#{user}@#{host}",
+      command
+    ]
+
     if key, do: ["-i", key] ++ base, else: base
   end
 
