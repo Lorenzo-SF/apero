@@ -37,11 +37,18 @@ defmodule Apero.Crypto.Random do
 
     chars = String.graphemes(charset)
     max = length(chars) - 1
+    max_byte = 256 - rem(256, max + 1) - 1
 
     Enum.map_join(1..length, fn _ ->
-      <<idx::size(8)>> = :crypto.strong_rand_bytes(1)
-      Enum.at(chars, rem(idx, max + 1))
+      idx = reject_to_bound(max_byte, max)
+      Enum.at(chars, idx)
     end)
+  end
+
+  defp reject_to_bound(max_byte, max) do
+    <<idx::size(8)>> = :crypto.strong_rand_bytes(1)
+
+    if idx > max_byte, do: reject_to_bound(max_byte, max), else: rem(idx, max + 1)
   end
 
   @doc "Timing-safe string comparison."

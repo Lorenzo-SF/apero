@@ -18,6 +18,10 @@ defmodule Apero.Env do
   Lines starting with `#` and empty lines are ignored. Both `KEY=VALUE` and
   `export KEY=VALUE` formats are supported. Values may optionally be quoted.
 
+  **⚠️ Side-effect:** This function mutates the global OS environment for
+  the entire BEAM virtual machine via `System.put_env/2`. Use with caution
+  in multi-application deployments.
+
   Returns the loaded values as a map.
   """
   @spec load(binary()) :: {:ok, map()} | {:error, binary()}
