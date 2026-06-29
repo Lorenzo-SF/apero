@@ -46,8 +46,8 @@ defmodule Apero.MixProject do
 
   defp deps do
     [
-      {:arrea, github: "Lorenzo-SF/arrea"},
-      {:alaja, github: "Lorenzo-SF/alaja"},
+      {:arrea, github: "Lorenzo-SF/arrea", branch: "main"},
+      {:alaja, github: "Lorenzo-SF/alaja", branch: "main"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
