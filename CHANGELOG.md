@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- `Apero.Llm.Health`, `Apero.Llm.ConfigManager`, `Apero.Llm.Embeddings` — moved to
+  `Candil` where they belong (LLM domain). See candil feat/apero-llm-move.
+- `lib/apero/llm/` directory.
+
 ## [0.2.1] - 2026-06-27
 
 ### Fixed
