@@ -1,5 +1,8 @@
 defmodule Apero.Compress do
   # credo:disable-for-this-file Credo.Check.Refactor.CyclomaticComplexity
+
+  alias Arrea.Command
+
   @moduledoc """
   Universal compression and archive utilities.
 
@@ -122,7 +125,7 @@ defmodule Apero.Compress do
         ["-r", output] ++ files
       end
 
-    case System.cmd("zip", args, cd: cd, stderr_to_stdout: true) do
+    case run("zip", args, cd: cd, stderr_to_stdout: true) do
       {_out, 0} -> {:ok, output}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -141,7 +144,7 @@ defmodule Apero.Compress do
         ["-o", "-d", output, file]
       end
 
-    case System.cmd("unzip", args, stderr_to_stdout: true) do
+    case run("unzip", args, stderr_to_stdout: true) do
       {_out, 0} -> {:ok, output}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -169,7 +172,7 @@ defmodule Apero.Compress do
 
     args = extra_flag ++ [flag_prefix, output, input]
 
-    case System.cmd("tar", args, stderr_to_stdout: true) do
+    case run("tar", args, stderr_to_stdout: true) do
       {_out, 0} -> {:ok, output}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -192,7 +195,7 @@ defmodule Apero.Compress do
 
     args = extra_flag ++ [flag_prefix, file, "-C", output]
 
-    case System.cmd("tar", args, stderr_to_stdout: true) do
+    case run("tar", args, stderr_to_stdout: true) do
       {_out, 0} -> {:ok, output}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -205,7 +208,7 @@ defmodule Apero.Compress do
   @doc "Compresses a file with gzip (replaces original with .gz)."
   @spec gzip(binary()) :: {:ok, binary()} | {:error, binary()}
   def gzip(file) do
-    case System.cmd("gzip", [file], stderr_to_stdout: true) do
+    case run("gzip", [file], stderr_to_stdout: true) do
       {_out, 0} -> {:ok, file <> ".gz"}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -214,7 +217,7 @@ defmodule Apero.Compress do
   @doc "Decompresses a gzip file, keeping the original."
   @spec gunzip(binary()) :: {:ok, binary()} | {:error, binary()}
   def gunzip(file) do
-    case System.cmd("gunzip", ["-k", file], stderr_to_stdout: true) do
+    case run("gunzip", ["-k", file], stderr_to_stdout: true) do
       {_out, 0} -> {:ok, String.replace_suffix(file, ".gz", "")}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -232,21 +235,21 @@ defmodule Apero.Compress do
   """
   @spec compress(binary(), single_algo()) :: {:ok, binary()} | {:error, binary()}
   def compress(file, :zstd) do
-    case System.cmd("zstd", [file, "--rm"], stderr_to_stdout: true) do
+    case run("zstd", [file, "--rm"], stderr_to_stdout: true) do
       {_out, 0} -> {:ok, file <> ".zst"}
       {err, _} -> {:error, String.trim(err)}
     end
   end
 
   def compress(file, :xz) do
-    case System.cmd("xz", [file], stderr_to_stdout: true) do
+    case run("xz", [file], stderr_to_stdout: true) do
       {_out, 0} -> {:ok, file <> ".xz"}
       {err, _} -> {:error, String.trim(err)}
     end
   end
 
   def compress(file, :bzip2) do
-    case System.cmd("bzip2", [file], stderr_to_stdout: true) do
+    case run("bzip2", [file], stderr_to_stdout: true) do
       {_out, 0} -> {:ok, file <> ".bz2"}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -260,21 +263,21 @@ defmodule Apero.Compress do
   """
   @spec decompress(binary(), single_algo()) :: {:ok, binary()} | {:error, binary()}
   def decompress(file, :zstd) do
-    case System.cmd("zstd", ["-d", file, "--rm"], stderr_to_stdout: true) do
+    case run("zstd", ["-d", file, "--rm"], stderr_to_stdout: true) do
       {_out, 0} -> {:ok, String.replace_suffix(file, ".zst", "")}
       {err, _} -> {:error, String.trim(err)}
     end
   end
 
   def decompress(file, :xz) do
-    case System.cmd("xz", ["-d", file], stderr_to_stdout: true) do
+    case run("xz", ["-d", file], stderr_to_stdout: true) do
       {_out, 0} -> {:ok, String.replace_suffix(file, ".xz", "")}
       {err, _} -> {:error, String.trim(err)}
     end
   end
 
   def decompress(file, :bzip2) do
-    case System.cmd("bzip2", ["-d", file], stderr_to_stdout: true) do
+    case run("bzip2", ["-d", file], stderr_to_stdout: true) do
       {_out, 0} -> {:ok, String.replace_suffix(file, ".bz2", "")}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -296,7 +299,7 @@ defmodule Apero.Compress do
     args = ["x", "-o#{output}", "-y", file]
     args = if password, do: args ++ ["-p#{password}"], else: args
 
-    case System.cmd("7z", args, stderr_to_stdout: true) do
+    case run("7z", args, stderr_to_stdout: true) do
       {_out, 0} -> {:ok, output}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -311,7 +314,7 @@ defmodule Apero.Compress do
     args = ["a", output, "-y"] ++ files
     args = if password, do: args ++ ["-p#{password}"], else: args
 
-    case System.cmd("7z", args, cd: cd, stderr_to_stdout: true) do
+    case run("7z", args, cd: cd, stderr_to_stdout: true) do
       {_out, 0} -> {:ok, output}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -326,7 +329,7 @@ defmodule Apero.Compress do
   def extract_rar(file, opts \\ []) do
     output = Keyword.get(opts, :output, ".")
 
-    case System.cmd("unrar", ["x", "-y", file, output], stderr_to_stdout: true) do
+    case run("unrar", ["x", "-y", file, output], stderr_to_stdout: true) do
       {_out, 0} -> {:ok, output}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -335,7 +338,7 @@ defmodule Apero.Compress do
   @doc "Creates a RAR archive from source paths."
   @spec create_rar(binary(), [binary()], keyword()) :: {:ok, binary()} | {:error, binary()}
   def create_rar(output, files, _opts \\ []) do
-    case System.cmd("rar", ["a", output] ++ files, stderr_to_stdout: true) do
+    case run("rar", ["a", output] ++ files, stderr_to_stdout: true) do
       {_out, 0} -> {:ok, output}
       {err, _} -> {:error, String.trim(err)}
     end
@@ -354,7 +357,7 @@ defmodule Apero.Compress do
   def list(file) do
     {cmd, args} = list_cmd_args(file)
 
-    case System.cmd(cmd, args, stderr_to_stdout: true) do
+    case run(cmd, args, stderr_to_stdout: true) do
       {output, 0} ->
         lines =
           output
@@ -384,6 +387,33 @@ defmodule Apero.Compress do
       :seven_z -> {"7z", ["l", file]}
       :rar -> {"unrar", ["l", file]}
       _ -> {"file", [file]}
+    end
+  end
+
+  # Single-quote a string for safe inclusion in a POSIX shell command
+  # line. Replaces internal single quotes with the standard
+  # `'\''` close-then-reopen pattern. Same approach as Apero.Git.Local,
+  # Apero.Docker, Apero.Kubernetes, Apero.SSH.
+  defp shell_quote(str) when is_binary(str) do
+    escaped = String.replace(str, "'", "'\''")
+    "'#{escaped}'"
+  end
+
+  # Routes a single tool invocation through Arrea.Command.execute/2 with
+  # validate: false. Returns the legacy {output, exit_code} tuple so the
+  # {_, 0} -> ...; {_, _} -> ... case patterns in the public functions
+  # above stay readable. On Arrea failure (timeout, missing binary)
+  # returns {"", 1} so the caller falls through to the error branch.
+  defp run(cmd, args, opts) do
+    quoted = Enum.map(args, &shell_quote/1)
+    full = [cmd | quoted] |> Enum.join(" ")
+
+    base = [validate: false, stderr_to_stdout: true]
+    arity = Keyword.merge(base, opts)
+
+    case Command.execute(full, arity) do
+      {:ok, %{stdout: out, exit_code: code}} -> {out, code}
+      _ -> {"", 1}
     end
   end
 end
