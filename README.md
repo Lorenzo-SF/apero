@@ -1,6 +1,6 @@
 # Apero
 
-[![version](https://img.shields.io/badge/version-0.2.1-blue.svg)](https://github.com/Lorenzo-SF/Apero)
+[![version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
 
 A utility library for Elixir covering file operations, Git management, Docker/Podman containers, cryptography, environment handling, config files, OS detection, and process management.
