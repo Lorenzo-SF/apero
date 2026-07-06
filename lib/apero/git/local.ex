@@ -4,10 +4,13 @@ defmodule Apero.Git.Local do
 
   All user-supplied values (commit messages, branch names, file paths)
   are passed as argument lists — never interpolated into shell strings —
-  to prevent shell injection attacks.
+  to prevent shell injection attacks. Arguments are shell-quoted
+  before being joined into the final command line, so values
+  containing whitespace, quotes or shell metacharacters are safe.
   """
 
   alias Apero.File.Tree
+  alias Arrea.Command
 
   @doc """
   Updates an existing repository by fetching from origin.
@@ -388,14 +391,10 @@ defmodule Apero.Git.Local do
   """
   @spec clone_repository(binary(), binary()) :: {:ok, binary()} | {:error, any()}
   def clone_repository(url, target_path) do
-    system_opts = [stderr_to_stdout: true, env: [{"GIT_TERMINAL_PROMPT", "0"}]]
+    env = %{"GIT_TERMINAL_PROMPT" => "0"}
+    cmd_line = "git clone --quiet #{shell_quote(url)} #{shell_quote(target_path)}"
 
-    case run_system_cmd(
-           "git",
-           ["clone", "--quiet", url, target_path],
-           "git clone --quiet <url> <target_path>",
-           system_opts
-         ) do
+    case run_system_cmd("git", cmd_line, env: env) do
       {:ok, %{exit_code: 0, stdout: output}} -> {:ok, String.trim(output)}
       {:ok, %{stdout: output}} -> {:error, String.trim(output)}
       {:error, reason} -> {:error, inspect(reason)}
@@ -671,24 +670,24 @@ defmodule Apero.Git.Local do
 
   defp run_git(git_args, opts \\ []) do
     cd = Keyword.get(opts, :cd)
-    system_opts = if cd, do: [stderr_to_stdout: true, cd: cd], else: [stderr_to_stdout: true]
-    cmd_line = "git " <> Enum.join(git_args, " ")
-    run_system_cmd("git", git_args, cmd_line, system_opts)
+    cmd_line = ["git" | Enum.map(git_args, &shell_quote/1)] |> Enum.map_join(" ", & &1)
+    run_system_cmd("git", cmd_line, cd: cd)
   end
 
-  defp run_system_cmd(cmd, args, telemetry_cmd_line, opts) do
+  defp run_system_cmd(_cmd, telemetry_cmd_line, opts) do
     start = System.monotonic_time()
 
     :telemetry.execute([:apero, :git, :command, :start], %{}, %{
       args: telemetry_cmd_line
     })
 
+    base_opts = [validate: false, stderr_to_stdout: true]
+    full_opts = Keyword.merge(base_opts, opts)
+
     result =
-      try do
-        {out, exit_code} = System.cmd(cmd, args, opts)
-        {:ok, %{stdout: out, exit_code: exit_code}}
-      rescue
-        e -> {:error, inspect(e)}
+      case Command.execute(telemetry_cmd_line, full_opts) do
+        {:ok, %{stdout: out, exit_code: code}} -> {:ok, %{stdout: out, exit_code: code}}
+        {:error, reason} -> {:error, reason}
       end
 
     duration = System.monotonic_time() - start
@@ -713,11 +712,22 @@ defmodule Apero.Git.Local do
   # CLI availability checks
   # ═══════════════════════════════════════════════════════════════════════
 
+  alias Apero.Proc, as: Proc
+
   @doc "Checks if the GitHub CLI (gh) is available."
   @spec gh_available?() :: boolean()
-  def gh_available?, do: System.find_executable("gh") != nil
+  def gh_available?, do: Proc.command_exists?("gh")
 
   @doc "Checks if the GitLab CLI (glab) is available."
   @spec glab_available?() :: boolean()
-  def glab_available?, do: System.find_executable("glab") != nil
+  def glab_available?, do: Proc.command_exists?("glab")
+
+  # Single-quote a string for safe inclusion in a POSIX shell command
+  # line. Replaces internal single quotes with the standard
+  # `'\\''` close-then-reopen pattern. Sufficient for all git argv
+  # values: commit messages, branch names, paths, refspecs.
+  defp shell_quote(str) when is_binary(str) do
+    escaped = String.replace(str, "'", "'\\''")
+    "'#{escaped}'"
+  end
 end
