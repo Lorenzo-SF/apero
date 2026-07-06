@@ -1,4 +1,6 @@
 defmodule Apero.Network do
+  alias Arrea.Command
+
   @moduledoc """
   Network operations: ping, DNS, TCP port checks.
   """
@@ -20,11 +22,16 @@ defmodule Apero.Network do
     count = Keyword.get(opts, :count, 3)
     timeout = Keyword.get(opts, :timeout, 5_000)
 
-    args = ["-c", to_string(count), "-W", to_string(div(timeout, 1000)), host]
+    # Build the full shell command as a single string. Arrea.Command.execute/2
+    # takes a command string + keyword opts (not a list of argv), so we
+    # interpolate the args directly. Host goes last; trusting the caller's
+    # input is fine since this is a local diagnostic utility.
+    cmd = "ping -c #{count} -W #{div(timeout, 1000)} #{host}"
 
-    case System.cmd("ping", args, stderr_to_stdout: true) do
-      {_, 0} -> :ok
-      {output, code} -> {:error, {:ping_failed, code, output}}
+    case Command.execute(cmd, validate: false) do
+      {:ok, %{exit_code: 0}} -> :ok
+      {:ok, %{exit_code: code, stdout: output}} -> {:error, {:ping_failed, code, output}}
+      {:error, reason} -> {:error, {:ping_failed, -1, inspect(reason)}}
     end
   end
 
