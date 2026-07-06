@@ -1,4 +1,5 @@
 defmodule Apero.File.IO do
+  alias Arrea.Command
   @moduledoc false
 
   @doc false
@@ -103,7 +104,7 @@ defmodule Apero.File.IO do
   def disk_usage(path \\ "/") do
     # LC_ALL=C so the parser can rely on the English column header
     # (Filesystem, Use%, etc.) regardless of the host's LANG.
-    case Arrea.Command.execute("df -k #{path}",
+    case Command.execute("df -k #{path}",
            validate: false,
            env: %{"LC_ALL" => "C"}
          ) do
