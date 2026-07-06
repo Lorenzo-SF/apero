@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-07-07
+
+### Changed
+- **`Apero.OS`** and **`Apero.Network`** migrated to Arrea
+  (`APER-100`). All shell commands now route through
+  `Arrea.Command.execute/2` so consumers get the full Arrea infra:
+  real timeout cancellation, validation, telemetry, sudo allowlist.
+- **`Apero.Proc`** migrated to Arrea (`APER-101`). `Process`-related
+  helpers (pid info, signal sending) now use Arrea primitives.
+- **`Apero.Git`** and **`Apero.Git.Local`** migrated to Arrea
+  (`APER-102`). `git` invocations routed through Arrea.
+- **`Apero.Docker`** and **`Apero.Kubernetes`** migrated to Arrea
+  (`APER-103`). `kubectl` and `docker` calls now use Arrea.
+- **`Apero.SSH`** and the rest of **`Apero.Kubernetes`** (final pass)
+  migrated to Arrea (`APER-104`). SCP/SSH wrappers and the remaining
+  `kubectl` operations unified under `Arrea.Command`.
+- **`Apero.Compress`** and **`Apero.File.IO`** migrated to Arrea
+  (`APER-105`). Compression (`gzip`/`gunzip`/`tar`) and File.IO
+  wrappers go through Arrea for telemetry and validation.
+
+### Fixed
+- **`Apero.Docker` / `Apero.Network` / `Apero.Git`** tests were
+  host-fragile: Docker volume/network tests assumed `/var/run/docker.sock`
+  and Git config tests assumed `$HOME/.gitconfig`. Now they pass on
+  any host (CI or local), skipping gracefully when the underlying
+  resource is missing.
+- **`Apero.Kubernetes.pods/2`**: was returning the legacy
+  `{output, exit_code}` 2-tuple while the `@spec` and `@doc` promised
+  `{:ok, output} | {:error, reason}`. Dialyzer flagged this as
+  `invalid_contract`. The body now wraps the result, so the function
+  honours its declared contract.
+
+### Docs
+- **README badge** and **`source_ref`** in `mix.exs` aligned to the
+  canonical `2.0.0` tag (no `v` prefix).
+- **Footer typo** fixed: "Tag v1.0.0" → "Tag 1.0.0".
+- **CHANGELOG footer**: drop `v` prefix from tag references to match
+  the canonical tag convention.
+
 ## [2.0.0] - 2026-07-05
 
 This release consolidates everything between 1.0.0 and the current
@@ -100,6 +139,7 @@ been collapsed into this single canonical entry.
 - Initial open source release: file operations, Git, Docker, env,
   conf, OS, proc, cache, compress.
 
+[2.1.0]: https://hex.pm/packages/apero/2.1.0
 [1.0.0]: https://hex.pm/packages/apero/1.0.0
 [2.0.0]: https://github.com/Lorenzo-SF/apero/releases/tag/2.0.0
 
