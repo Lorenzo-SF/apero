@@ -97,7 +97,7 @@ defmodule Apero.MixProject do
       ],
       source_url: "https://github.com/Lorenzo-SF/apero",
       homepage_url: "https://github.com/Lorenzo-SF/apero",
-      source_ref: "v2.0.0"
+      source_ref: "2.0.0"
     ]
   end
 
