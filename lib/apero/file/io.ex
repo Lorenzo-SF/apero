@@ -101,9 +101,15 @@ defmodule Apero.File.IO do
   @doc false
   @spec disk_usage(binary()) :: {:ok, map()} | {:error, binary()}
   def disk_usage(path \\ "/") do
-    case System.cmd("df", ["-k", path], stderr_to_stdout: true) do
-      {output, 0} -> parse_df(output)
-      {err, _} -> {:error, String.trim(err)}
+    # LC_ALL=C so the parser can rely on the English column header
+    # (Filesystem, Use%, etc.) regardless of the host's LANG.
+    case Arrea.Command.execute("df -k #{path}",
+           validate: false,
+           env: %{"LC_ALL" => "C"}
+         ) do
+      {:ok, %{exit_code: 0, stdout: output}} -> parse_df(output)
+      {:ok, %{exit_code: _, stdout: err}} -> {:error, String.trim(err)}
+      {:error, reason} -> {:error, inspect(reason)}
     end
   end
 
