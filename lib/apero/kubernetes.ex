@@ -17,7 +17,7 @@ defmodule Apero.Kubernetes do
   """
   @spec available?() :: boolean()
   def available? do
-    case run("cluster-info") do
+    case run(["cluster-info"]) do
       {_, 0} -> true
       _ -> false
     end
