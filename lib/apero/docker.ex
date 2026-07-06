@@ -100,21 +100,15 @@ defmodule Apero.Docker do
 
   @doc "Creates a volume."
   @spec volume_create(binary(), keyword()) :: {:ok, binary()} | {:error, binary()}
-  def volume_create(name, opts \\ []) do
-    run_cmd_str(runtime(), ["volume", "create", name], opts)
-  end
+  def volume_create(name, opts \\ []), do: raw_cmd(["volume", "create", name], opts)
 
   @doc "Lists volumes."
   @spec volume_list(keyword()) :: {:ok, binary()} | {:error, binary()}
-  def volume_list(opts \\ []) do
-    run_cmd_str(runtime(), ["volume", "ls"], opts)
-  end
+  def volume_list(opts \\ []), do: raw_cmd(["volume", "ls"], opts)
 
   @doc "Removes a volume."
   @spec volume_remove(binary(), keyword()) :: {:ok, binary()} | {:error, binary()}
-  def volume_remove(name, opts \\ []) do
-    run_cmd_str(runtime(), ["volume", "rm", name], opts)
-  end
+  def volume_remove(name, opts \\ []), do: raw_cmd(["volume", "rm", name], opts)
 
   # ═══════════════════════════════════════════════════════════════════════
   # Network operations
@@ -122,21 +116,15 @@ defmodule Apero.Docker do
 
   @doc "Creates a network."
   @spec network_create(binary(), keyword()) :: {:ok, binary()} | {:error, binary()}
-  def network_create(name, opts \\ []) do
-    run_cmd_str(runtime(), ["network", "create", name], opts)
-  end
+  def network_create(name, opts \\ []), do: raw_cmd(["network", "create", name], opts)
 
   @doc "Lists networks."
   @spec network_list(keyword()) :: {:ok, binary()} | {:error, binary()}
-  def network_list(opts \\ []) do
-    run_cmd_str(runtime(), ["network", "ls"], opts)
-  end
+  def network_list(opts \\ []), do: raw_cmd(["network", "ls"], opts)
 
   @doc "Removes a network."
   @spec network_remove(binary(), keyword()) :: {:ok, binary()} | {:error, binary()}
-  def network_remove(name, opts \\ []) do
-    run_cmd_str(runtime(), ["network", "rm", name], opts)
-  end
+  def network_remove(name, opts \\ []), do: raw_cmd(["network", "rm", name], opts)
 
   # ═══════════════════════════════════════════════════════════════════════
   # Private
@@ -146,6 +134,16 @@ defmodule Apero.Docker do
     cd = Keyword.get(opts, :cd, ".")
 
     case run_cmd_str(to_string(runtime()), ["compose", command | extra_args], cd: cd) do
+      {out, 0} -> {:ok, String.trim(out)}
+      {err, _} -> {:error, String.trim(err)}
+    end
+  end
+
+  # Run a top-level `runtime <args> ...` invocation and normalise the
+  # legacy {output, exit_code} tuple into the public {:ok, _} / {:error, _}
+  # contract shared by the compose helpers.
+  defp raw_cmd(args, opts) do
+    case run_cmd_str(runtime(), args, opts) do
       {out, 0} -> {:ok, String.trim(out)}
       {err, _} -> {:error, String.trim(err)}
     end

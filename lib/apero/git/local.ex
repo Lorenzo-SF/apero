@@ -233,10 +233,13 @@ defmodule Apero.Git.Local do
 
   @doc """
   Gets a Git configuration value (local → global → system).
+
+  Accepts an optional `cd:` option to scope the lookup to a specific
+  repository directory.
   """
-  @spec config(binary()) :: binary()
-  def config(attr) do
-    case run_git(["config", "--get", attr]) do
+  @spec config(binary(), keyword()) :: binary()
+  def config(attr, opts \\ []) do
+    case run_git(["config", "--get", attr], opts) do
       {:ok, %{exit_code: 0, stdout: output}} -> String.trim(output)
       _ -> ""
     end
@@ -244,9 +247,12 @@ defmodule Apero.Git.Local do
 
   @doc """
   Gets a Git configuration value from the global scope.
+
+  Accepts an optional `cd:` option (kept for signature parity with
+  `config/2`; ignored at the global scope).
   """
-  @spec config_global(binary()) :: binary()
-  def config_global(attr) do
+  @spec config_global(binary(), keyword()) :: binary()
+  def config_global(attr, _opts \\ []) do
     case run_git(["config", "--global", "--get", attr]) do
       {:ok, %{exit_code: 0, stdout: output}} -> String.trim(output)
       _ -> ""
@@ -255,10 +261,13 @@ defmodule Apero.Git.Local do
 
   @doc """
   Gets a Git configuration value from the local (repo) scope.
+
+  Accepts an optional `cd:` option to scope the lookup to a specific
+  repository directory.
   """
-  @spec config_local(binary()) :: binary()
-  def config_local(attr) do
-    case run_git(["config", "--local", "--get", attr]) do
+  @spec config_local(binary(), keyword()) :: binary()
+  def config_local(attr, opts \\ []) do
+    case run_git(["config", "--local", "--get", attr], opts) do
       {:ok, %{exit_code: 0, stdout: output}} -> String.trim(output)
       _ -> ""
     end

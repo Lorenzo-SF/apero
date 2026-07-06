@@ -525,12 +525,14 @@ defmodule Apero.GitTest do
   end
 
   describe "config/1" do
+    @tag :external_cmd
     test "returns git config value" do
       {tmp, work, _repo} = setup_git_repo()
       on_exit(fn -> File.rm_rf!(tmp) end)
-      # Override with local config on the work repo
+      # Set local config on the work repo and read it back through the
+      # Local.config/2 API so the lookup is scoped to that directory.
       System.cmd("git", ["config", "user.name", "Tester"], cd: work)
-      assert Local.config("user.name") != ""
+      assert Local.config("user.name", cd: work) != ""
     end
   end
 
