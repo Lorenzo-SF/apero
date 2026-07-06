@@ -101,7 +101,7 @@ been collapsed into this single canonical entry.
   conf, OS, proc, cache, compress.
 
 [1.0.0]: https://hex.pm/packages/apero/1.0.0
-[2.0.0]: https://github.com/Lorenzo-SF/apero/releases/tag/v2.0.0
+[2.0.0]: https://github.com/Lorenzo-SF/apero/releases/tag/2.0.0
 
 
 > ## A note on history
