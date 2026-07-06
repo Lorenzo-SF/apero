@@ -116,7 +116,7 @@ been collapsed into this single canonical entry.
 > not preserved is, by the maintainer's choice, no longer part of the
 > canonical development line.
 >
-> Tag `v1.0.0` points to the initial open-source cut-over; tag
-> `v2.0.0` points to the current HEAD and the canonical consolidated
+> Tag `1.0.0` points to the initial open-source cut-over; tag
+> `2.0.0` points to the current HEAD and the canonical consolidated
 > release. All versioned artifacts on Hex.pm and GitHub Releases
 > follow this convention.
