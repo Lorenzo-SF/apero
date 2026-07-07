@@ -31,7 +31,11 @@ defmodule Apero.Kubernetes do
   @spec pods(String.t(), keyword()) :: {:ok, String.t()} | {:error, term()}
   def pods(namespace, opts \\ []) do
     output = Keyword.get(opts, :output, "json")
-    run(["get", "pods", "-n", namespace, "-o", output])
+
+    case run(["get", "pods", "-n", namespace, "-o", output]) do
+      {out, 0} -> {:ok, out}
+      {out, code} -> {:error, {:pods_failed, code, out}}
+    end
   end
 
   @doc """
