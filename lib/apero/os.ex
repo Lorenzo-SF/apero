@@ -1,9 +1,17 @@
 defmodule Apero.OS do
+  alias Arrea.Command
+
   @moduledoc """
   Operating system information utilities for Apero.
 
   Provides a unified interface for querying system metadata regardless of
   the underlying platform (Linux, macOS, Windows).
+
+  All command execution is routed through `Arrea.Command.execute/2`
+  with `validate: false` (these are read-only info commands; no need
+  to pay the per-call safety-validation cost). Use `LC_ALL=C` env on
+  locale-sensitive commands (nproc, sysctl) for stable output parsing
+  on non-English locales.
 
   ## Example
 
@@ -69,13 +77,13 @@ defmodule Apero.OS do
   def kernel_version do
     case :os.type() do
       {:unix, _} ->
-        case System.cmd("uname", ["-r"], stderr_to_stdout: true) do
+        case run_cmd("uname -r") do
           {out, 0} -> String.trim(out)
           _ -> "unknown"
         end
 
       {:win32, _} ->
-        case System.cmd("cmd", ["/c", "ver"], stderr_to_stdout: true) do
+        case run_cmd("cmd /c ver") do
           {out, 0} -> String.trim(out)
           _ -> "unknown"
         end
@@ -120,15 +128,19 @@ defmodule Apero.OS do
   """
   @spec cpu_count() :: pos_integer()
   def cpu_count do
+    # LC_ALL=C so nproc / sysctl output is locale-stable on Spanish/French
+    # hosts (where default locale would otherwise corrupt numeric parsing).
+    env = %{"LC_ALL" => "C"}
+
     case :os.type() do
       {:unix, :linux} ->
-        case System.cmd("nproc", [], stderr_to_stdout: true) do
+        case run_cmd("nproc", env: env) do
           {out, 0} -> parse_integer(out, System.schedulers_online())
           _ -> System.schedulers_online()
         end
 
       {:unix, :darwin} ->
-        case System.cmd("sysctl", ["-n", "hw.logicalcpu"], stderr_to_stdout: true) do
+        case run_cmd("sysctl -n hw.logicalcpu", env: env) do
           {out, 0} -> parse_integer(out, System.schedulers_online())
           _ -> System.schedulers_online()
         end
@@ -157,14 +169,14 @@ defmodule Apero.OS do
   def root? do
     case :os.type() do
       {:unix, _} ->
-        case System.cmd("id", ["-u"], stderr_to_stdout: true) do
+        case run_cmd("id -u") do
           {output, 0} -> String.trim(output) == "0"
           _ -> false
         end
 
       {:win32, _} ->
-        case System.cmd("net", ["session"], stderr_to_stdout: true) do
-          {_out, 0} -> true
+        case run_cmd("net session") do
+          {_, 0} -> true
           _ -> false
         end
     end
@@ -196,7 +208,7 @@ defmodule Apero.OS do
   end
 
   defp uname_m do
-    case System.cmd("uname", ["-m"], stderr_to_stdout: true) do
+    case run_cmd("uname -m") do
       {out, 0} -> String.trim(out)
       _ -> ""
     end
@@ -227,7 +239,7 @@ defmodule Apero.OS do
   end
 
   defp read_macos_memory do
-    case System.cmd("sysctl", ["-n", "hw.memsize"], stderr_to_stdout: true) do
+    case run_cmd("sysctl -n hw.memsize", env: %{"LC_ALL" => "C"}) do
       {out, 0} ->
         out |> String.trim() |> parse_integer(0) |> div(1_024 * 1_024)
 
@@ -254,6 +266,19 @@ defmodule Apero.OS do
     case Regex.run(~r/^MemTotal:\s+(\d+)\s+kB/, line) do
       [_, kb] -> div(String.to_integer(kb), 1_024)
       _ -> nil
+    end
+  end
+
+  # Runs a shell command via Arrea.Command.execute/2 and returns
+  # the legacy `{output, exit_code}` tuple shape so the existing
+  # `case ... do {out, 0} -> ...; _ -> ...` call sites stay unchanged.
+  # On Arrea failure (timeout, missing binary, etc.) returns
+  # `{"", 1}` so the caller falls through to its fallback branch.
+  @spec run_cmd(String.t(), keyword()) :: {String.t(), non_neg_integer()}
+  defp run_cmd(cmd, opts \\ []) do
+    case Command.execute(cmd, [validate: false] ++ opts) do
+      {:ok, %{stdout: out, exit_code: code}} -> {out, code}
+      _ -> {"", 1}
     end
   end
 end
