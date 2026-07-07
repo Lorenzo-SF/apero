@@ -5,9 +5,17 @@ defmodule Apero.Proc do
 
   Provides helpers for checking command availability, finding executables,
   inspecting running processes, sending signals, and viewing process logs.
+
+  All command execution is routed through `Arrea.Command.execute/2`
+  (with `validate: false`) so consumers get real timeout cancellation,
+  telemetry, and structured errors. The fragile `try/rescue` blocks
+  are gone — Arrea returns `{:error, reason}` on timeout / missing
+  binary / etc.
+
   """
 
   alias Apero.OS
+  alias Arrea.Command
 
   @doc "Returns `true` if the given command exists in the system `PATH`."
   @spec command_exists?(String.t()) :: boolean()
@@ -71,29 +79,15 @@ defmodule Apero.Proc do
 
     case OS.type() do
       os when os in [:linux, :macos] ->
-        try do
-          {_out, exit_code} =
-            System.cmd("kill", ["-#{sig}", to_string(pid)], stderr_to_stdout: true)
-
-          case exit_code do
-            0 -> :ok
-            _ -> {:error, "kill signal #{sig} for pid #{pid} failed"}
-          end
-        catch
-          e -> {:error, inspect(e)}
+        case run_cmd("kill -#{sig} #{pid}") do
+          {_, 0} -> :ok
+          {_, _} -> {:error, "kill signal #{sig} for pid #{pid} failed"}
         end
 
       :windows ->
-        try do
-          {_out, exit_code} =
-            System.cmd("taskkill", ["/PID", to_string(pid), "/F"], stderr_to_stdout: true)
-
-          case exit_code do
-            0 -> :ok
-            _ -> {:error, "taskkill for pid #{pid} failed"}
-          end
-        catch
-          e -> {:error, inspect(e)}
+        case run_cmd("taskkill /PID #{pid} /F") do
+          {_, 0} -> :ok
+          {_, _} -> {:error, "taskkill for pid #{pid} failed"}
         end
 
       _ ->
@@ -104,35 +98,38 @@ defmodule Apero.Proc do
   @doc "Lists files opened by a process (lsof wrapper). Linux/macOS only."
   @spec lsof(non_neg_integer()) :: {:ok, [String.t()]} | {:error, term()}
   def lsof(pid) do
-    {output, exit_code} = System.cmd("lsof", ["-p", to_string(pid)], stderr_to_stdout: true)
-
-    case exit_code do
-      0 ->
+    case run_cmd("lsof -p #{pid}") do
+      {output, 0} ->
         lines = output |> String.split("\n") |> Enum.drop(1) |> Enum.reject(&(&1 == ""))
         {:ok, lines}
 
-      _ ->
+      {output, _} ->
         {:error, output}
     end
-  rescue
-    e -> {:error, inspect(e)}
   end
 
   @doc "Lists processes using a specific file or port (fuser wrapper)."
   @spec fuser(String.t()) :: {:ok, [non_neg_integer()]} | {:error, term()}
   def fuser(target) do
-    {output, exit_code} = System.cmd("fuser", [target], stderr_to_stdout: true)
+    case run_cmd("fuser #{target}") do
+      {output, 0} ->
+        # fuser output can include non-numeric lines (e.g. header on
+        # some distros) and empty tokens. Use Integer.parse/1 to skip
+        # anything that isn't a valid PID, so a single malformed token
+        # doesn't fail the whole call.
+        pids =
+          output
+          |> String.split()
+          |> Enum.flat_map(fn
+            {n, ""} -> [n]
+            _ -> []
+          end)
 
-    case exit_code do
-      0 ->
-        pids = output |> String.split() |> Enum.map(&String.to_integer/1)
         {:ok, pids}
 
-      _ ->
+      {output, _} ->
         {:error, output}
     end
-  rescue
-    e -> {:error, inspect(e)}
   end
 
   @doc "Shows recent logs for a process via journalctl (Linux systemd) or log (macOS)."
@@ -142,46 +139,19 @@ defmodule Apero.Proc do
 
     case OS.type() do
       :linux ->
-        try do
-          {out, exit_code} =
-            System.cmd(
-              "journalctl",
-              ["-u", service, "-n", to_string(lines), "--no-pager"],
-              stderr_to_stdout: true
-            )
-
-          case exit_code do
-            0 -> {:ok, String.trim(out)}
-            _ -> {:error, String.trim(out)}
-          end
-        catch
-          e -> {:error, inspect(e)}
+        case run_cmd("journalctl -u #{service} -n #{lines} --no-pager") do
+          {out, 0} -> {:ok, String.trim(out)}
+          {out, _} -> {:error, String.trim(out)}
         end
 
       :macos ->
-        try do
-          # Escape single quotes in the service name to prevent predicate injection
-          safe_service = String.replace(service, "'", "'\\''")
+        # Escape single quotes in the service name to prevent predicate
+        # injection in the --predicate clause.
+        safe_service = String.replace(service, "'", "'\\''")
 
-          {out, exit_code} =
-            System.cmd(
-              "log",
-              [
-                "show",
-                "--predicate",
-                "process == '#{safe_service}'",
-                "--last",
-                "#{lines}m"
-              ],
-              stderr_to_stdout: true
-            )
-
-          case exit_code do
-            0 -> {:ok, String.trim(out)}
-            _ -> {:error, String.trim(out)}
-          end
-        catch
-          e -> {:error, inspect(e)}
+        case run_cmd("log show --predicate process == '#{safe_service}' --last #{lines}m") do
+          {out, 0} -> {:ok, String.trim(out)}
+          {out, _} -> {:error, String.trim(out)}
         end
 
       _ ->
@@ -192,47 +162,24 @@ defmodule Apero.Proc do
   # ── Private ────────────────────────────────────────────────────────
 
   defp ps_linux(_opts) do
-    {output, exit_code} =
-      System.cmd(
-        "ps",
-        ["-eo", "pid,ppid,user,%cpu,%mem,comm", "--no-headers"],
-        stderr_to_stdout: true
-      )
-
-    case exit_code do
-      0 -> {:ok, parse_ps_output(output)}
-      _ -> {:error, output}
+    case run_cmd("ps -eo pid,ppid,user,%cpu,%mem,comm --no-headers") do
+      {output, 0} -> {:ok, parse_ps_output(output)}
+      {output, _} -> {:error, output}
     end
-  rescue
-    e -> {:error, inspect(e)}
   end
 
   defp ps_macos(_opts) do
-    {output, exit_code} =
-      System.cmd(
-        "ps",
-        ["-eo", "pid,ppid,user,%cpu,%mem,comm", "-r"],
-        stderr_to_stdout: true
-      )
-
-    case exit_code do
-      0 -> {:ok, parse_ps_output(output)}
-      _ -> {:error, output}
+    case run_cmd("ps -eo pid,ppid,user,%cpu,%mem,comm -r") do
+      {output, 0} -> {:ok, parse_ps_output(output)}
+      {output, _} -> {:error, output}
     end
-  rescue
-    e -> {:error, inspect(e)}
   end
 
   defp ps_windows(_opts) do
-    {output, exit_code} =
-      System.cmd("tasklist", ["/FO", "CSV", "/NH"], stderr_to_stdout: true)
-
-    case exit_code do
-      0 -> {:ok, parse_tasklist(output)}
-      _ -> {:error, output}
+    case run_cmd("tasklist /FO CSV /NH") do
+      {output, 0} -> {:ok, parse_tasklist(output)}
+      {output, _} -> {:error, output}
     end
-  rescue
-    e -> {:error, inspect(e)}
   end
 
   defp parse_ps_output(output) do
@@ -240,17 +187,31 @@ defmodule Apero.Proc do
     |> String.split("\n")
     |> Enum.map(&String.trim/1)
     |> Enum.reject(&(&1 == ""))
-    |> Enum.map(fn line ->
+    # ps can emit %CPU as an integer ("663") on busy systems or as a
+    # float ("0.0") on idle ones. Use Float.parse which handles both
+    # ("0.0" -> 0.0, "663" -> 663.0); nil falls through to the
+    # original raw string and the line is dropped (better than crashing
+    # the whole ps/1 call on a single malformed line).
+    |> Enum.flat_map(fn line ->
       parts = String.split(line, ~r/\s+/, parts: 6)
 
-      %{
-        pid: String.to_integer(Enum.at(parts, 0)),
-        ppid: String.to_integer(Enum.at(parts, 1)),
-        user: Enum.at(parts, 2),
-        cpu: String.to_float(Enum.at(parts, 3)),
-        mem: String.to_float(Enum.at(parts, 4)),
-        command: Enum.at(parts, 5)
-      }
+      with {pid, ""} <- Integer.parse(Enum.at(parts, 0) || ""),
+           {ppid, ""} <- Integer.parse(Enum.at(parts, 1) || ""),
+           {cpu, ""} <- Float.parse(Enum.at(parts, 3) || ""),
+           {mem, ""} <- Float.parse(Enum.at(parts, 4) || "") do
+        [
+          %{
+            pid: pid,
+            ppid: ppid,
+            user: Enum.at(parts, 2) || "",
+            cpu: cpu,
+            mem: mem,
+            command: Enum.at(parts, 5) || ""
+          }
+        ]
+      else
+        _ -> []
+      end
     end)
   end
 
@@ -280,4 +241,17 @@ defmodule Apero.Proc do
   defp signal_to_int(:stop), do: 19
   defp signal_to_int(:cont), do: 18
   defp signal_to_int(other) when is_integer(other), do: other
+
+  # Same shape as Apero.OS.run_cmd/1 — single-line wrapper around
+  # Arrea.Command.execute/2 that returns the legacy {output, exit_code}
+  # tuple so the existing case ... do {out, 0} -> ...; _ -> ... call
+  # sites stay unchanged. On Arrea failure (timeout, missing binary)
+  # returns {"", 1} so the caller falls through to its fallback branch.
+  @spec run_cmd(String.t()) :: {String.t(), non_neg_integer()}
+  defp run_cmd(cmd) do
+    case Command.execute(cmd, validate: false) do
+      {:ok, %{stdout: out, exit_code: code}} -> {out, code}
+      _ -> {"", 1}
+    end
+  end
 end
