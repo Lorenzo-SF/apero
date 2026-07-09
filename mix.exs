@@ -46,8 +46,6 @@ defmodule Apero.MixProject do
 
   defp deps do
     [
-      {:arrea, path: "../arrea"},
-      {:alaja, path: "../alaja"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
