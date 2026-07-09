@@ -41,7 +41,10 @@ defmodule Apero.MixProject do
   def application do
     [
       mod: {Apero.Application, []},
-      extra_applications: [:logger, :runtime_tools, :crypto, :file_system]
+
+
+      extra_applications: [:logger, :runtime_tools, :crypto, :file_system],
+      applications: [:public_key]
     ]
   end
 
