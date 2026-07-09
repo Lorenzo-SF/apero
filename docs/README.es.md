@@ -1,197 +1,103 @@
 # Apero
 
-[![version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
-[![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
+[![version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
+[![license](https://img.shields.io/badge/license-MIT-green.svg)](../LICENSE.md)
 
-Apero es una librería de utilidades para Elixir que cubre operaciones de ficheros, gestión de Git, contenedores Docker/Podman, criptografía, manejo de variables de entorno, ficheros de configuración, detección de SO y gestión de procesos.
+**Librería de utilidades puras para Elixir** — sin ejecución de shell. Proporciona
+operaciones de ficheros, criptografía, manejo de entorno/configuración, reintentos,
+caché, y utilidades puras de SO/Procesos.
 
----
+> Las operaciones con shell (Docker, Git, SSH, K8s, Compress, Network,
+> OS arch/kernel/memoria, Proc ps/kill/lsof, File watch) se movieron a
+> **[Trebejo](https://hex.pm/packages/trebejo)** v1.0.0.
 
 ## Inicio rápido
 
 ```elixir
 def deps do
   [
-    {:apero, github: "Lorenzo-SF/apero"}
+    {:apero, "~> 3.0.0"}
   ]
 end
 ```
 
----
-
 ## Módulos
 
-### `Apero.VFS` — Operaciones de ficheros
-
-Operaciones unificadas de ficheros, rutas y observación de cambios.
-
+### File & Path
 ```elixir
-Apero.VFS.dir?("lib")               # => true
-Apero.VFS.file?("mix.exs")          # => true
-Apero.VFS.exists?("priv/datos")     # => false
-
-{:ok, contenido} = Apero.VFS.read("config/ajustes.json")
-Apero.VFS.write("tmp/prueba.txt", "hola mundo")
-
-# Checksums
-Apero.VFS.checksum("mix.exs", :sha256)
-
-# Recursos temporales (limpieza automática)
-Apero.VFS.with_tmp_file(fn ruta ->
-  exportar_datos(ruta)
-end)
+Apero.File.dir?("lib")                                    # => true
+Apero.File.file?("mix.exs")                               # => true
+Apero.File.read("config.json")                            # => {:ok, contenido}
+Apero.File.write("salida.txt", "hola")                    # => :ok
+Apero.File.atomic_write("salida.txt", "atómico!")         # => :ok
+Apero.File.checksum("mix.exs", :sha256)                   # => {:ok, digest}
+Apero.File.copy("a.txt", "b.txt")                         # => {:ok, bytes}
+Apero.File.generate_tree(["lib/", "test/"])               # => árbol ASCII
 ```
 
----
-
-### `Apero.Compress` — Compresión
-
-Archive y descompress de ficheros.
-
+### Cryptografía
 ```elixir
-Apero.Compress.zip("/tmp/backup.zip", ["lib/", "config/"])
-Apero.Compress.unzip("/tmp/backup.zip", output: "extraido/")
-
-Apero.Compress.tar("/tmp/archivo.tar.gz", "lib/", compressed: :gzip)
-Apero.Compress.untar("/tmp/archivo.tar.gz", output: "desempaquetado/")
+Apero.Crypto.sha256("datos")                              # => hex digest
+Apero.Crypto.random_hex(16)                               # => token aleatorio
+{:ok, ct} = Apero.Crypto.encrypt("secreto")               # AES-256-GCM
+{:ok, pt} = Apero.Crypto.decrypt(ct, clave)
 ```
 
----
-
-### `Apero.Git` — Operaciones Git
-
-Gestión de repositorios, clonado, staging, commits y sincronización.
-
+### Entorno y Configuración
 ```elixir
-repo = %{url: "git@github.com:org/repo.git", path: "/tmp/repo"}
-
-Apero.Git.ensure_clone(repo, "/tmp/espacio")
-Apero.Git.add(repo.path, :all)
-Apero.Git.commit(repo, "feat: añadir feature")
-Apero.Git.push(repo.path, "main")
-
-# Verificar cambios sin commit
-Apero.Git.has_uncommitted_changes?(repo.path)
+Apero.Env.load(".env")                                    # carga archivo .env
+Apero.Conf.load("app.yaml")                               # {:ok, config}
 ```
 
----
-
-### `Apero.Docker` — Docker/Podman
-
-Gestión del ciclo de vida de contenedores Docker/Podman.
-
-```elixir
-Apero.Docker.up(cd: "infra/", build: true)
-Apero.Docker.down(cd: "infra/", volumes: true)
-Apero.Docker.restart(cd: "infra/", services: ["app"])
-
-Apero.Docker.exec("app", ["mix", "ecto.migrate"], cd: "infra/")
-```
-
----
-
-### `Apero.Crypto` — Criptografía
-
-Hashing, cifrado y generación aleatoria segura.
-
-```elixir
-Apero.Crypto.sha256("hola")
-Apero.Crypto.random_hex(16)
-
-{:ok, cifrado} = Apero.Crypto.encrypt("datos sensibles", clave)
-{:ok, "datos sensibles"} = Apero.Crypto.decrypt(cifrado, clave)
-```
-
----
-
-### `Apero.Conf` — Ficheros de configuración
-
-Carga y parseo de ficheros JSON, YAML y TOML.
-
-```elixir
-{:ok, cfg} = Apero.Conf.load("config/ajustes.json")
-{:ok, cfg} = Apero.Conf.load("config/app.yaml", format: :yaml)
-```
-
----
-
-### `Apero.Env` — Variables de entorno
-
-Manejo de variables de entorno y ficheros `.env`.
-
-```elixir
-Apero.Env.load(".env")
-Apero.Env.fetch!("DATABASE_URL")
-```
-
----
-
-### `Apero.OS` — Detección del SO
-
-Información y detección del sistema operativo.
-
-```elixir
-Apero.OS.info()
-# => %{type: :linux, arch: :x86_64, hostname: "servidor", distro: "Ubuntu", ...}
-
-Apero.OS.in_container?()  # => true/false
-```
-
----
-
-### `Apero.Proc` — Gestión de procesos
-
-Utilidades de procesos y ejecución de comandos.
-
-```elixir
-Apero.Proc.command_exists?("git")  # => true
-Apero.Proc.which("elixir")        # => "/usr/local/bin/elixir"
-
-{:ok, procesos} = Apero.Proc.ps()
-```
-
----
-
-### `Apero.Pkg` — Gestor de paquetes
-
-Abstracción del gestor de paquetes para múltiples distribuciones.
-
-```elixir
-Apero.Pkg.install("curl")
-Apero.Pkg.update()
-```
-
----
-
-### `Apero.Cache` — Caché
-
-Caché en memoria con backend ETS.
-
+### Caché
 ```elixir
 Apero.Cache.put(:mi_cache, :clave, "valor")
 {:ok, valor} = Apero.Cache.get(:mi_cache, :clave)
 ```
 
----
+### Reintentos
+```elixir
+Apero.Retry.with(fn -> Api.llamar() end, max_retries: 3)
+```
+
+### SO y Proc (subconjunto puro)
+```elixir
+Apero.OS.type()                                           # => :linux | :macos | :windows
+Apero.OS.hostname()                                       # => "miservidor"
+Apero.Proc.command_exists?("git")                         # => true
+Apero.Proc.vm_memory()                                    # => bytes
+```
 
 ## Arquitectura
 
-Apero está organizado en módulos enfocados:
+```
+apero (stdlib pura)
+  ├── File      — operaciones de ruta, I/O atómico, árboles, GenServer watcher
+  ├── Crypto    — hashing (SHA-256/512, MD5), cifrado AES, claves
+  ├── Env/Conf  — variables de entorno, archivos de config (JSON, YAML, TOML)
+  ├── Cache     — ETS en memoria con TTL
+  ├── Retry     — reintentos configurables con backoff
+  ├── OS        — detección de tipo, hostname (Erlang puro)
+  └── Proc      — disponibilidad de comandos, introspección VM (Elixir puro)
+```
 
-- **VFS** — Operaciones de ficheros (lectura, escritura, copia, movimiento, eliminación, glob, watch)
-- **Compress** — Operaciones de archivo (zip, tar, gzip)
-- **Git** — Wrappers de comandos Git
-- **Docker** — Ciclo de vida de contenedores
-- **Crypto** — Hashing y generación aleatoria
-- **Conf** — Parseo de ficheros de configuración (JSON, YAML, TOML)
-- **Env** — Carga de ficheros .env
-- **OS** — Detección del sistema operativo
-- **Proc** — Utilidades de procesos y comandos
-- **Pkg** — Interfaz del gestor de paquetes
-- **Cache** — Caché en memoria
+## Lo que se movió a Trebejo
 
----
+| Apero (v2.x) | Trebejo (v1.0.0) |
+|---|---|
+| `Apero.Docker.*` | → `Trebejo.Docker.*` |
+| `Apero.Git.*` | → `Trebejo.Git.*` / `Trebejo.Git.Local.*` |
+| `Apero.SSH.*` | → `Trebejo.SSH.*` |
+| `Apero.Kubernetes.*` | → `Trebejo.Kubernetes.*` |
+| `Apero.Compress.*` | → `Trebejo.Compress.*` |
+| `Apero.Network.*` | → `Trebejo.Network.*` |
+| Apero.OS (arch, kernel, etc.) | → `Trebejo.OS.*` |
+| Apero.Proc (ps, kill, lsof, etc.) | → `Trebejo.Proc.*` |
+| Apero.File.watch | → `Trebejo.File.watch/3` |
+| Apero.File.IO.disk_usage | → `Trebejo.File.IO.disk_usage/1` |
 
 ## Licencia
 
 MIT
+
+An English version of this README is available at [`../README.md`](../README.md).

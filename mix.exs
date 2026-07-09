@@ -4,13 +4,13 @@ defmodule Apero.MixProject do
   def project do
     [
       app: :apero,
-      version: "2.1.0",
+      version: "3.0.0",
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       name: "Apero",
       description:
-        "Comprehensive utility library for Elixir - file operations, Git, Docker/Podman, cryptography, env files, config files, OS detection, and processes.",
+        "Pure utility library for Elixir - file operations, cryptography, env/config files, retry, cache, and OS/Proc introspection (no shell execution).",
       source_url: "https://github.com/Lorenzo-SF/apero",
       homepage_url: "https://github.com/Lorenzo-SF/apero",
       package: [
@@ -40,21 +40,20 @@ defmodule Apero.MixProject do
   def application do
     [
       mod: {Apero.Application, []},
-      extra_applications: [:logger, :runtime_tools, :crypto, :file_system]
+      extra_applications: [:logger, :runtime_tools, :crypto, :file_system],
+      applications: [:public_key]
     ]
   end
 
   defp deps do
     [
-      {:arrea, github: "Lorenzo-SF/arrea", branch: "main"},
-      {:alaja, github: "Lorenzo-SF/alaja", branch: "main"},
+      {:arrea, "~> 2.1.0"},
+      {:alaja, "~> 2.1.0"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:dialyxir, ">= 1.0.0", only: [:dev, :test], runtime: false},
       {:jason, "~> 1.4"},
-      {:req, "~> 0.5.10"},
-      {:mime, "~> 2.0"},
       {:file_system, "~> 1.0"},
       {:yaml_elixir, "~> 2.9", optional: true},
       {:toml, "~> 0.7", optional: true}
@@ -79,11 +78,8 @@ defmodule Apero.MixProject do
           Apero.File.IO,
           Apero.File.Path,
           Apero.File.Tree,
-          Apero.File.Watcher,
-          Apero.Compress
+          Apero.File.Watcher
         ],
-        "Git & VCS": [Apero.Git, Apero.Git.Local],
-        Containers: [Apero.Docker],
         Security: [
           Apero.Crypto,
           Apero.Crypto.Hash,
@@ -93,11 +89,11 @@ defmodule Apero.MixProject do
         ],
         Environment: [Apero.Env, Apero.Conf],
         System: [Apero.OS, Apero.Proc],
-        Network: [Apero.Network, Apero.SSH, Apero.Kubernetes, Apero.Retry]
+        "Retry & Cache": [Apero.Retry, Apero.Cache]
       ],
       source_url: "https://github.com/Lorenzo-SF/apero",
       homepage_url: "https://github.com/Lorenzo-SF/apero",
-      source_ref: "2.1.0"
+      source_ref: "3.0.0"
     ]
   end
 

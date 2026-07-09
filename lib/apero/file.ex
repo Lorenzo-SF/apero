@@ -1,6 +1,6 @@
 defmodule Apero.File do
   @moduledoc """
-  File system utilities — file ops, path operations, atomic writes, temp resources, locking, watching.
+  File system utilities — file ops, path operations, atomic writes, temp resources, locking.
 
   Provides domain-specific tools for file and filesystem operations behind a
   consistent `{:ok, result} | {:error, reason}` interface.
@@ -11,6 +11,13 @@ defmodule Apero.File do
     * `Apero.File.Path` — path operations (copy, move, delete, glob, etc.)
     * `Apero.File.Tree` — ASCII tree generation and printing
     * `Apero.File.Watcher` — file system watching via GenServer
+
+  ## Watching
+
+  File watching moved to `Trebejo.File.watch/3` in v3.0.0 because it
+  depends on `Arrea.WorkerSupervisor`. The `Apero.File.Watcher` GenServer
+  remains in Apero (it is pure OTP), but the `Trebejo.File.watch/3` convenience wrapper
+  is now in Trebejo.
 
   ## Backward Compatibility
 
@@ -245,15 +252,6 @@ defmodule Apero.File do
   defdelegate with_lock(lock_path, opts \\ [], fun), to: Apero.File.IO
 
   @doc """
-  Returns disk usage information for the filesystem containing `path`.
-
-  Returns a map with `:total_mb`, `:used_mb`, `:free_mb`, `:use_pct`.
-  Only supported on Unix-like systems.
-  """
-  @spec disk_usage(binary()) :: {:ok, map()} | {:error, binary()}
-  defdelegate disk_usage(path \\ "/"), to: Apero.File.IO
-
-  @doc """
   Copies multiple files in parallel.
 
   Each element of `pairs` is a `{source, dest}` tuple.
@@ -285,48 +283,8 @@ defmodule Apero.File do
   @spec print_tree(binary()) :: :ok
   defdelegate print_tree(path), to: Apero.File.Tree
 
-  # ── File watcher (stays in File) ────────────────────────────────────────
-
-  @doc """
-  Starts watching `dirs` for file system changes.
-
-  Calls `callback` with a list of `{path, events}` tuples after each
-  debounce window.
-
-  ## Options
-
-    * `:debounce_ms` — debounce delay in ms (default: `100`)
-    * `:name` — optional name for the watcher process
-
-  Returns `{:ok, pid}`.
-  """
-  @spec watch([binary()], ([{binary(), [atom()]}] -> any()), keyword()) ::
-          {:ok, pid()} | {:error, term()}
-  def watch(dirs, callback, opts \\ []) when is_list(dirs) and is_function(callback, 1) do
-    watcher_opts = %{
-      dirs: dirs,
-      callback: callback,
-      debounce_ms: Keyword.get(opts, :debounce_ms, 100),
-      name: Keyword.get(opts, :name)
-    }
-
-    child_spec = {Apero.File.Watcher, watcher_opts}
-
-    case DynamicSupervisor.start_child(Arrea.WorkerSupervisor, child_spec) do
-      {:ok, pid} -> {:ok, pid}
-      {:ok, pid, _info} -> {:ok, pid}
-      {:error, {:already_started, pid}} -> {:ok, pid}
-      :ignore -> {:error, :ignore}
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
-  @doc """
-  Stops a file watcher by PID.
-  """
-  @spec unwatch(pid()) :: :ok
-  def unwatch(pid) when is_pid(pid) do
-    GenServer.stop(pid, :normal)
-    :ok
-  end
+  # ── File watcher (moved to Trebejo.File) ───────────────────────────────
+  # The watch/3 and unwatch/1 functions moved to Trebejo.File in v3.0.0
+  # because they depend on Arrea.WorkerSupervisor. The Apero.File.Watcher
+  # GenServer remains here (pure OTP).
 end

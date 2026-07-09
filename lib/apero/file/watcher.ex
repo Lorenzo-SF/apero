@@ -1,5 +1,15 @@
 defmodule Apero.File.Watcher do
-  @moduledoc false
+  @moduledoc """
+  File system watcher GenServer.
+
+  This is a pure OTP GenServer that wraps `file_system` for watching
+  file changes. The `watch/3` convenience function moved to `Trebejo.File`
+  in v3.0.0 because it depends on `Arrea.WorkerSupervisor`, but this
+  GenServer remains in Apero.
+
+  You normally use `Trebejo.File.watch/3` rather than instantiating this
+  directly.
+  """
   use GenServer
 
   @type event :: :modified | :created | :deleted | :renamed | :isdir | :attribute | atom()

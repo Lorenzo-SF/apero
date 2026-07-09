@@ -1,6 +1,13 @@
 defmodule Apero.File.IO do
-  alias Arrea.Command
-  @moduledoc false
+  @moduledoc """
+  I/O operations: atomic writes, checksums, temporary resources, file locking.
+
+  These functions are exposed via `Apero.File.*` delegates. You normally call them
+  through `Apero.File` rather than directly.
+
+  > Only pure I/O operations remain in Apero v3.0.0.
+  > Shell-based I/O (`Trebejo.File.IO.disk_usage/1`) moved to `Trebejo.File.IO`.
+  """
 
   @doc false
   @spec atomic_write(binary(), iodata()) :: :ok | {:error, binary()}
@@ -100,27 +107,11 @@ defmodule Apero.File.IO do
   end
 
   @doc false
-  @spec disk_usage(binary()) :: {:ok, map()} | {:error, binary()}
-  def disk_usage(path \\ "/") do
-    # LC_ALL=C so the parser can rely on the English column header
-    # (Filesystem, Use%, etc.) regardless of the host's LANG.
-    case Command.execute("df -k #{path}",
-           validate: false,
-           env: %{"LC_ALL" => "C"}
-         ) do
-      {:ok, %{exit_code: 0, stdout: output}} -> parse_df(output)
-      {:ok, %{exit_code: _, stdout: err}} -> {:error, String.trim(err)}
-      {:error, reason} -> {:error, inspect(reason)}
-    end
-  end
-
-  @doc false
   @spec copy_many([{binary(), binary()}]) :: [{:ok, non_neg_integer()} | {:error, binary()}]
   def copy_many(pairs) when is_list(pairs) do
     pairs
     |> Enum.with_index()
     |> Task.async_stream(
-      # Use File.cp directly to avoid circular dependency with Path module
       fn {pair, _idx} -> copy_pair(pair) end,
       max_concurrency: min(length(pairs), 8),
       ordered: false
@@ -166,43 +157,6 @@ defmodule Apero.File.IO do
         {:error, reason} ->
           {:error, "Cannot acquire lock #{lock_path}: #{reason}"}
       end
-    end
-  end
-
-  defp parse_df(output) do
-    case String.split(output, "\n", trim: true) do
-      [_ | [line | _]] ->
-        parts = String.split(line, ~r/\s+/, trim: true)
-
-        case parts do
-          [_fs, total_kb, used_kb, free_kb | rest] ->
-            {:ok,
-             %{
-               total_mb: div(String.to_integer(total_kb), 1_024),
-               used_mb: div(String.to_integer(used_kb), 1_024),
-               free_mb: div(String.to_integer(free_kb), 1_024),
-               use_pct: parse_use_pct(rest)
-             }}
-
-          _ ->
-            {:error, "cannot parse df output"}
-        end
-
-      _ ->
-        {:error, "unexpected df output"}
-    end
-  end
-
-  defp parse_use_pct(rest) do
-    case rest do
-      [pct | _] ->
-        pct
-        |> String.trim_trailing("%")
-        |> Integer.parse()
-        |> elem(0)
-
-      _ ->
-        0
     end
   end
 end

@@ -1,5 +1,10 @@
 defmodule Apero.File.Path do
-  @moduledoc false
+  @moduledoc """
+  Path operations: directory checks, glob, copy, move, delete, read, write.
+
+  These functions are exposed via `Apero.File.*` delegates. You normally call them
+  through `Apero.File` rather than directly.
+  """
 
   @doc false
   @spec dir?(binary()) :: boolean()

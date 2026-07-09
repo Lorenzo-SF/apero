@@ -1,181 +1,101 @@
 # Apero
 
-[![version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
+[![version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
 
-A utility library for Elixir covering file operations, Git management, Docker/Podman containers, cryptography, environment handling, config files, OS detection, and process management.
+**Pure utility library for Elixir** — no shell execution. Provides file operations,
+cryptography, environment/config handling, retry, cache, and pure OS/Proc introspection.
+
+> Shell-based operations (Docker, Git, SSH, K8s, Compress, Network, OS arch/kernel/memory,
+> Proc ps/kill/lsof, File watch) moved to **[Trebejo](https://hex.pm/packages/trebejo)** v1.0.0.
 
 ## Quick Start
 
 ```elixir
 def deps do
   [
-    apero, github: "Lorenzo-SF/apero"}
+    {:apero, "~> 3.0.0"}
   ]
 end
 ```
 
 ## Modules
 
-### `Apero.VFS` — File Operations
-
-Unified file, path, and watch operations.
-
+### File & Path
 ```elixir
-Apero.VFS.dir?("lib")               # => true
-Apero.VFS.file?("mix.exs")          # => true
-Apero.VFS.exists?("priv/data")      # => false
-
-{:ok, content} = Apero.VFS.read("config/settings.json")
-Apero.VFS.write("tmp/scratch.txt", "hello world")
-
-# Checksums
-Apero.VFS.checksum("mix.exs", :sha256)
-
-# Temporary resources (auto-cleaned)
-Apero.VFS.with_tmp_file(fn path ->
-  process_file(path)
-end)
+Apero.File.dir?("lib")                                    # => true
+Apero.File.file?("mix.exs")                               # => true
+Apero.File.read("config.json")                            # => {:ok, content}
+Apero.File.write("out.txt", "hello")                      # => :ok
+Apero.File.atomic_write("out.txt", "atomic!")             # => :ok
+Apero.File.checksum("mix.exs", :sha256)                   # => {:ok, digest}
+Apero.File.copy("a.txt", "b.txt")                         # => {:ok, bytes}
+Apero.File.generate_tree(["lib/", "test/"])               # => ASCII tree
 ```
 
-### `Apero.Compress` — Compression
-
-Archive and decompress files.
-
+### Cryptography
 ```elixir
-Apero.Compress.zip("/tmp/backup.zip", ["lib/", "config/"])
-Apero.Compress.unzip("/tmp/backup.zip", output: "extracted/")
-
-Apero.Compress.tar("/tmp/archive.tar.gz", "lib/", compressed: :gzip)
-Apero.Compress.untar("/tmp/archive.tar.gz", output: "unpacked/")
+Apero.Crypto.sha256("data")                               # => hex digest
+Apero.Crypto.random_hex(16)                               # => random token
+{:ok, ct} = Apero.Crypto.encrypt("secret")                # AES-256-GCM
+{:ok, pt} = Apero.Crypto.decrypt(ct, key)
 ```
 
-### `Apero.Git` — Git Operations
-
-Repository management and Git commands.
-
+### Environment & Config
 ```elixir
-repo = %{url: "git@github.com:org/repo.git", path: "/tmp/repo"}
-
-Apero.Git.ensure_clone(repo, "/tmp/workspace")
-Apero.Git.add(repo.path, :all)
-Apero.Git.commit(repo, "feat: add feature")
-Apero.Git.push(repo.path, "main")
-
-# Check for uncommitted changes
-Apero.Git.has_uncommitted_changes?(repo.path)
+Apero.Env.load(".env")                                    # load .env file
+Apero.Conf.load("app.yaml")                               # {:ok, config}
 ```
 
-### `Apero.Docker` — Docker/Podman
-
-Container lifecycle management.
-
-```elixir
-Apero.Docker.up(cd: "infra/", build: true)
-Apero.Docker.down(cd: "infra/", volumes: true)
-Apero.Docker.restart(cd: "infra/", services: ["app"])
-
-Apero.Docker.exec("app", ["mix", "ecto.migrate"], cd: "infra/")
-```
-
-### `Apero.Crypto` — Cryptography
-
-Hashing, encryption, and secure random generation.
-
-```elixir
-Apero.Crypto.sha256("password")
-Apero.Crypto.random_hex(16)
-
-{:ok, ciphertext} = Apero.Crypto.encrypt("secret data")
-{:ok, plaintext} = Apero.Crypto.decrypt(ciphertext, key)
-```
-
-### `Apero.Conf` — Config Files
-
-Load and parse configuration files.
-
-```elixir
-{:ok, config} = Apero.Conf.load("config/settings.json")
-{:ok, config} = Apero.Conf.load("config/app.yaml", format: :yaml)
-```
-
-### `Apero.Env` — Environment Variables
-
-Environment variable handling.
-
-```elixir
-Apero.Env.load(".env")
-Apero.Env.fetch!("DATABASE_URL")
-```
-
-### `Apero.OS` — OS Detection
-
-System information and detection.
-
-```elixir
-Apero.OS.info()
-# => %{type: :linux, arch: :x86_64, hostname: "server", distro: "Ubuntu", ...}
-
-Apero.OS.in_container?()  # => true/false
-```
-
-### `Apero.Proc` — Process Management
-
-Process utilities and command execution.
-
-```elixir
-Apero.Proc.command_exists?("git")  # => true
-Apero.Proc.which("elixir")        # => "/usr/local/bin/elixir"
-
-{:ok, processes} = Apero.Proc.ps()
-```
-
-### `Apero.Pkg` — Package Management
-
-Package manager abstraction.
-
-```elixir
-Apero.Pkg.install("curl")
-Apero.Pkg.update()
-```
-
-### `Apero.Cache` — Caching
-
-In-memory caching with ETS backend.
-
+### Cache
 ```elixir
 Apero.Cache.put(:my_cache, :key, "value")
 {:ok, value} = Apero.Cache.get(:my_cache, :key)
 ```
 
+### Retry
+```elixir
+Apero.Retry.with(fn -> Api.call() end, max_retries: 3)
+```
+
+### OS & Proc (pure subset)
+```elixir
+Apero.OS.type()                                           # => :linux | :macos | :windows
+Apero.OS.hostname()                                       # => "myhost"
+Apero.Proc.command_exists?("git")                         # => true
+Apero.Proc.vm_memory()                                    # => bytes
+```
+
 ## Architecture
 
-Apero is organized into focused modules:
+```
+apero (pure stdlib)
+  ├── File        — path ops, atomic I/O, trees, watcher GenServer
+  ├── Crypto      — hashing (SHA-256/512, MD5), AES encryption, keys
+  ├── Env / Conf  — environment variables, config files (JSON, YAML, TOML)
+  ├── Cache       — in-memory ETS with TTL
+  ├── Retry       — configurable retry with backoff
+  ├── OS          — type detection, hostname (pure Erlang)
+  └── Proc        — command availability, VM introspection (pure Elixir)
+```
 
-- **VFS** — File operations (read, write, copy, move, delete, glob, watch)
-- **Compress** — Archive operations (zip, tar, gzip)
-- **Git** — Git command wrappers
-- **Docker** — Container lifecycle
-- **Crypto** — Hashing and random generation
-- **Conf** — Config file parsing (JSON, YAML, TOML)
-- **Env** — .env file loading
-- **OS** — Operating system detection
-- **Proc** — Process and command utilities
-- **Pkg** — Package manager interface
-- **Cache** — In-memory caching
+## What moved to Trebejo
 
----
-
-## Project history
-
-This library was developed as part of a larger internal toolkit and extracted
-to open source in mid-2026. The single commit visible on `main` represents the
-OSS cut-over point — all the features shipped in `1.0.0` were built and tested
-before being made public. Subsequent releases (`1.0.1`, `1.1.0`, ...) will be
-tagged normally, providing a clean public history going forward.
-
-A Spanish version of this README is available at [`README_ES.md`](./README_ES.md).
+| Apero (v2.x) | Trebejo (v1.0.0) |
+|---|---|
+| `Apero.Docker.*` | → `Trebejo.Docker.*` |
+| `Apero.Git.*` | → `Trebejo.Git.*` / `Trebejo.Git.Local.*` |
+| `Apero.SSH.*` | → `Trebejo.SSH.*` |
+| `Apero.Kubernetes.*` | → `Trebejo.Kubernetes.*` |
+| `Apero.Compress.*` | → `Trebejo.Compress.*` |
+| `Apero.Network.*` | → `Trebejo.Network.*` |
+| Apero.OS (arch, kernel, etc.) | → `Trebejo.OS.*` |
+| Apero.Proc (ps, kill, lsof, etc.) | → `Trebejo.Proc.*` |
+| Apero.File.watch | → `Trebejo.File.watch/3` |
+| Apero.File.IO.disk_usage | → `Trebejo.File.IO.disk_usage/1` |
 
 ## License
 
 MIT
+
+Una versión en español de este README está disponible en [`docs/README.es.md`](docs/README.es.md).

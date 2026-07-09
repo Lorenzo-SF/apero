@@ -5,7 +5,124 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] - 2026-07-09
+
+### Breaking: Apero-Trebejo split
+
+Apero 3.0.0 extracts all shell-dependent modules into a new library
+**Trebejo**. Apero becomes a **pure utility library** with no Arrea
+dependency.
+
+#### Removed modules (moved to Trebejo v1.0.0)
+
+- `Apero.Docker` → `Trebejo.Docker`
+- `Apero.Git` / `Apero.Git.Local` → `Trebejo.Git` / `Trebejo.Git.Local`
+- `Apero.SSH` → `Trebejo.SSH`
+- `Apero.Kubernetes` → `Trebejo.Kubernetes`
+- `Apero.Compress` → `Trebejo.Compress`
+- `Apero.Network` → `Trebejo.Network`
+- `Apero.OS.arch/0`, `kernel_version/0`, `distro/0`, `info/0`,
+  `cpu_count/0`, `total_memory_mb/0`, `root?/0`, `wsl?/0`, `container?/0`
+  → `Trebejo.OS`
+- `Apero.Proc.ps/1`, `kill/2`, `lsof/1`, `fuser/1`, `logs/2`
+  → `Trebejo.Proc`
+- `Apero.File.watch/3`, `unwatch/1` → `Trebejo.File`
+- `Apero.File.IO.disk_usage/1` → `Trebejo.File.IO`
+
+#### Kept in Apero (pure, no Arrea dependency)
+
+- `Apero.OS.type/0`, `hostname/0` (pure Erlang stdlib)
+- `Apero.Proc.command_exists?/1`, `which/1`, `available_commands/1`,
+  `locate_commands/1`, `os_pid/0`, `scheduler_count/0`, `vm_memory/0`,
+  `vm_uptime/0` (pure stdlib)
+- `Apero.File` (path ops, tree, watcher GenServer)
+- `Apero.File.IO` (atomic writes, checksums, temp files, locking)
+- `Apero.Env`, `Apero.Conf`, `Apero.Retry`, `Apero.Cache`
+- `Apero.Crypto` and submodules
+
+#### Dependency changes
+
+- **Removed**: `{:arrea, "~> 2.1.0"}` — Apero no longer depends on Arrea
+- **Migration guide**: see `README.md` or `Trebejo` docs for the full
+  module mapping
+
+## [2.1.0] - 2026-07-07
+
+### Changed
+- **`Apero.OS`** and **`Apero.Network`** migrated to Arrea
+  (`APER-100`). All shell commands now route through
+  `Arrea.Command.execute/2` so consumers get the full Arrea infra:
+  real timeout cancellation, validation, telemetry, sudo allowlist.
+- **`Apero.Proc`** migrated to Arrea (`APER-101`). `Process`-related
+  helpers (pid info, signal sending) now use Arrea primitives.
+- **`Apero.Git`** and **`Apero.Git.Local`** migrated to Arrea
+  (`APER-102`). `git` invocations routed through Arrea.
+- **`Apero.Docker`** and **`Apero.Kubernetes`** migrated to Arrea
+  (`APER-103`). `kubectl` and `docker` calls now use Arrea.
+- **`Apero.SSH`** and the rest of **`Apero.Kubernetes`** (final pass)
+  migrated to Arrea (`APER-104`). SCP/SSH wrappers and the remaining
+  `kubectl` operations unified under `Arrea.Command`.
+- **`Apero.Compress`** and **`Apero.File.IO`** migrated to Arrea
+  (`APER-105`). Compression (`gzip`/`gunzip`/`tar`) and File.IO
+  wrappers go through Arrea for telemetry and validation.
+
+### Fixed
+- **`Apero.Docker` / `Apero.Network` / `Apero.Git`** tests were
+  host-fragile: Docker volume/network tests assumed `/var/run/docker.sock`
+  and Git config tests assumed `$HOME/.gitconfig`. Now they pass on
+  any host (CI or local), skipping gracefully when the underlying
+  resource is missing.
+- **`Apero.Kubernetes.pods/2`**: was returning the legacy
+  `{output, exit_code}` 2-tuple while the `@spec` and `@doc` promised
+  `{:ok, output} | {:error, reason}`. Dialyzer flagged this as
+  `invalid_contract`. The body now wraps the result, so the function
+  honours its declared contract.
+
+### Docs
+- **README badge** and **`source_ref`** in `mix.exs` aligned to the
+  canonical `2.0.0` tag (no `v` prefix).
+- **Footer typo** fixed: "Tag v1.0.0" → "Tag 1.0.0".
+- **CHANGELOG footer**: drop `v` prefix from tag references to match
+  the canonical tag convention.
+
+## [2.1.0] - 2026-07-07
+
+### Changed
+- **`Apero.OS`** and **`Apero.Network`** migrated to Arrea
+  (`APER-100`). All shell commands now route through
+  `Arrea.Command.execute/2` so consumers get the full Arrea infra:
+  real timeout cancellation, validation, telemetry, sudo allowlist.
+- **`Apero.Proc`** migrated to Arrea (`APER-101`). `Process`-related
+  helpers (pid info, signal sending) now use Arrea primitives.
+- **`Apero.Git`** and **`Apero.Git.Local`** migrated to Arrea
+  (`APER-102`). `git` invocations routed through Arrea.
+- **`Apero.Docker`** and **`Apero.Kubernetes`** migrated to Arrea
+  (`APER-103`). `kubectl` and `docker` calls now use Arrea.
+- **`Apero.SSH`** and the rest of **`Apero.Kubernetes`** (final pass)
+  migrated to Arrea (`APER-104`). SCP/SSH wrappers and the remaining
+  `kubectl` operations unified under `Arrea.Command`.
+- **`Apero.Compress`** and **`Apero.File.IO`** migrated to Arrea
+  (`APER-105`). Compression (`gzip`/`gunzip`/`tar`) and File.IO
+  wrappers go through Arrea for telemetry and validation.
+
+### Fixed
+- **`Apero.Docker` / `Apero.Network` / `Apero.Git`** tests were
+  host-fragile: Docker volume/network tests assumed `/var/run/docker.sock`
+  and Git config tests assumed `$HOME/.gitconfig`. Now they pass on
+  any host (CI or local), skipping gracefully when the underlying
+  resource is missing.
+- **`Apero.Kubernetes.pods/2`**: was returning the legacy
+  `{output, exit_code}` 2-tuple while the `@spec` and `@doc` promised
+  `{:ok, output} | {:error, reason}`. Dialyzer flagged this as
+  `invalid_contract`. The body now wraps the result, so the function
+  honours its declared contract.
+
+### Docs
+- **README badge** and **`source_ref`** in `mix.exs` aligned to the
+  canonical `2.0.0` tag (no `v` prefix).
+- **Footer typo** fixed: "Tag v1.0.0" → "Tag 1.0.0".
+- **CHANGELOG footer**: drop `v` prefix from tag references to match
+  the canonical tag convention.
 
 ## [2.1.0] - 2026-07-07
 
