@@ -1,5 +1,10 @@
 defmodule Apero.File.Tree do
-  @moduledoc false
+  @moduledoc """
+  ASCII tree generation and printing for file listings.
+
+  These functions are exposed via `Apero.File.*` delegates. You normally call them
+  through `Apero.File` rather than directly.
+  """
 
   @doc false
   @spec generate_tree([binary()]) :: binary()

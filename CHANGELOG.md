@@ -5,7 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] - 2026-07-09
+
+### Breaking: Apero-Trebejo split
+
+Apero 3.0.0 extracts all shell-dependent modules into a new library
+**Trebejo**. Apero becomes a **pure utility library** with no Arrea
+dependency.
+
+#### Removed modules (moved to Trebejo v1.0.0)
+
+- `Apero.Docker` → `Trebejo.Docker`
+- `Apero.Git` / `Apero.Git.Local` → `Trebejo.Git` / `Trebejo.Git.Local`
+- `Apero.SSH` → `Trebejo.SSH`
+- `Apero.Kubernetes` → `Trebejo.Kubernetes`
+- `Apero.Compress` → `Trebejo.Compress`
+- `Apero.Network` → `Trebejo.Network`
+- `Apero.OS.arch/0`, `kernel_version/0`, `distro/0`, `info/0`,
+  `cpu_count/0`, `total_memory_mb/0`, `root?/0`, `wsl?/0`, `container?/0`
+  → `Trebejo.OS`
+- `Apero.Proc.ps/1`, `kill/2`, `lsof/1`, `fuser/1`, `logs/2`
+  → `Trebejo.Proc`
+- `Apero.File.watch/3`, `unwatch/1` → `Trebejo.File`
+- `Apero.File.IO.disk_usage/1` → `Trebejo.File.IO`
+
+#### Kept in Apero (pure, no Arrea dependency)
+
+- `Apero.OS.type/0`, `hostname/0` (pure Erlang stdlib)
+- `Apero.Proc.command_exists?/1`, `which/1`, `available_commands/1`,
+  `locate_commands/1`, `os_pid/0`, `scheduler_count/0`, `vm_memory/0`,
+  `vm_uptime/0` (pure stdlib)
+- `Apero.File` (path ops, tree, watcher GenServer)
+- `Apero.File.IO` (atomic writes, checksums, temp files, locking)
+- `Apero.Env`, `Apero.Conf`, `Apero.Retry`, `Apero.Cache`
+- `Apero.Crypto` and submodules
+
+#### Dependency changes
+
+- **Removed**: `{:arrea, "~> 2.1.0"}` — Apero no longer depends on Arrea
+- **Migration guide**: see `README.md` or `Trebejo` docs for the full
+  module mapping
 
 ## [2.1.0] - 2026-07-07
 
