@@ -1,4 +1,7 @@
 defmodule Apero.Conf do
+  @compile {:no_warn_undefined, {YamlElixir, :read_from_string!, 1}}
+  @compile {:no_warn_undefined, {Toml, :decode, 1}}
+
   @moduledoc """
   Configuration file management — unified interface for JSON, YAML and TOML.
 
