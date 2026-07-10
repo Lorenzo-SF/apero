@@ -4,7 +4,7 @@ defmodule Apero.MixProject do
   def project do
     [
       app: :apero,
-      version: "3.0.0",
+      version: "3.1.0",
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -40,15 +40,12 @@ defmodule Apero.MixProject do
   def application do
     [
       mod: {Apero.Application, []},
-      extra_applications: [:logger, :runtime_tools, :crypto, :file_system],
-      applications: [:public_key]
+      extra_applications: [:logger, :runtime_tools, :crypto, :file_system, :public_key]
     ]
   end
 
   defp deps do
     [
-      {:arrea, "~> 2.1.0"},
-      {:alaja, "~> 2.1.0"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
