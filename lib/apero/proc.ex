@@ -51,6 +51,6 @@ defmodule Apero.Proc do
   @spec vm_uptime() :: non_neg_integer()
   def vm_uptime do
     :erlang.statistics(:wall_clock)
-    |> elem(0)
+    |> elem(1)
   end
 end
