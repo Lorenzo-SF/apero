@@ -2,6 +2,7 @@ defmodule Apero.Crypto do
   # credo:disable-for-this-file Credo.Check.Readability.PreferImplicitTry
 
   alias Apero.Crypto.{Cipher, Hash, Key, Random}
+  alias Apero.Cache.Crypto, as: CacheCrypto
 
   @moduledoc """
   Cryptographic utilities — hashing, symmetric/asymmetric encryption, KDF.
@@ -31,17 +32,17 @@ defmodule Apero.Crypto do
   @deprecated "Use Apero.Crypto.Hash.sha256/1 instead"
   @doc "SHA-256 hash (hex encoded)."
   @spec sha256(binary()) :: binary()
-  def sha256(data) when is_binary(data), do: Hash.sha256(data)
+  def sha256(data) when is_binary(data), do: CacheCrypto.sha256(data)
 
   @deprecated "Use Apero.Crypto.Hash.sha512/1 instead"
   @doc "SHA-512 hash (hex encoded)."
   @spec sha512(binary()) :: binary()
-  def sha512(data) when is_binary(data), do: Hash.sha512(data)
+  def sha512(data) when is_binary(data), do: CacheCrypto.sha512(data)
 
   @deprecated "Use Apero.Crypto.Hash.md5/1 instead"
   @doc "MD5 hash (hex encoded). NOTE: MD5 is cryptographically broken — only for checksums."
   @spec md5(binary()) :: binary()
-  def md5(data) when is_binary(data), do: Hash.md5(data)
+  def md5(data) when is_binary(data), do: CacheCrypto.md5(data)
 
   @deprecated "Use Apero.Crypto.Hash.hmac/2 instead"
   @doc "HMAC-SHA256 (hex encoded)."
