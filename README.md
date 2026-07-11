@@ -37,6 +37,7 @@ Apero.File.generate_tree(["lib/", "test/"])               # => ASCII tree
 ```elixir
 Apero.Crypto.sha256("data")                               # => hex digest
 Apero.Crypto.random_hex(16)                               # => random token
+*`sha256/1`, `sha512/1`, and `md5/1` results are now cached in ETS for faster repeated calls.*
 {:ok, ct} = Apero.Crypto.encrypt("secret")                # AES-256-GCM
 {:ok, pt} = Apero.Crypto.decrypt(ct, key)
 ```
@@ -67,6 +68,8 @@ Apero.Proc.vm_memory()                                    # => bytes
 ```
 
 ## Architecture
+
+<!-- Added `Apero.Cache.Crypto` module that adds caching to cryptographic helpers -->
 
 ```
 apero (pure stdlib)
