@@ -10,7 +10,7 @@ defmodule Apero.MixProject do
       deps: deps(),
       name: "Apero",
       description:
-        "Pure utility library for Elixir - file operations, cryptography, env/config files, retry, cache, and OS/Proc introspection (no shell execution).",
+        "Pure utility library for Elixir — file operations, cryptography, Docker, package managers, env/config, retry, cache, and OS/Proc introspection. Uses System.cmd for shell operations (no Arrea dependency).",
       source_url: "https://github.com/Lorenzo-SF/apero",
       homepage_url: "https://github.com/Lorenzo-SF/apero",
       package: [
