@@ -1,4 +1,6 @@
 defmodule Apero.Application do
+  alias Apero.Cache.Crypto
+
   @moduledoc """
   OTP application entry point for Apero.
 
@@ -13,9 +15,9 @@ defmodule Apero.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      Apero.Cache.Supervisor
-    ]
+    children = []
+    Crypto.start_link()
+    # Ensure crypto cache ETS is initialized before supervision
 
     opts = [strategy: :one_for_one, name: Apero.Supervisor]
     Supervisor.start_link(children, opts)

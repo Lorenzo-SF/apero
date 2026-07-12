@@ -2,6 +2,8 @@ defmodule Apero.Crypto do
   # credo:disable-for-this-file Credo.Check.Readability.PreferImplicitTry
 
   alias Apero.Crypto.{Cipher, Hash, Key, Random}
+
+  alias Apero.Cache.Crypto, as: CacheCrypto
   alias Apero.Cache.Crypto, as: CacheCrypto
 
   @moduledoc """
@@ -196,4 +198,16 @@ defmodule Apero.Crypto do
     do: Random.secure_compare(a, b)
 
   def secure_compare(_, _), do: false
+
+  def start_link do
+    case :ets.whereis(:apero_cache_crypto) do
+      :undefined ->
+        :ets.new(:apero_cache_crypto, [:named_table, :public, :set, read_concurrency: true])
+
+      _ ->
+        :ok
+    end
+
+    :ok
+  end
 end
