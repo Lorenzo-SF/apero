@@ -4,7 +4,6 @@ defmodule Apero.Crypto do
   alias Apero.Crypto.{Cipher, Hash, Key, Random}
 
   alias Apero.Cache.Crypto, as: CacheCrypto
-  alias Apero.Cache.Crypto, as: CacheCrypto
 
   @moduledoc """
   Cryptographic utilities — hashing, symmetric/asymmetric encryption, KDF.
