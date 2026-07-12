@@ -22,7 +22,9 @@ defmodule Apero.Cache.Crypto do
     case :ets.info(@table) do
       :undefined ->
         :ets.new(@table, [:named_table, :public, :set, read_concurrency: true])
-      _ -> :ok
+
+      _ ->
+        :ok
     end
   end
 
@@ -31,8 +33,11 @@ defmodule Apero.Cache.Crypto do
   """
   def sha256(data) when is_binary(data) do
     init()
+
     case :ets.lookup(@table, {:sha256, data}) do
-      [{_, result}] -> result
+      [{_, result}] ->
+        result
+
       [] ->
         result = Apero.Crypto.Hash.sha256(data)
         :ets.insert(@table, {{:sha256, data}, result})
@@ -45,8 +50,11 @@ defmodule Apero.Cache.Crypto do
   """
   def sha512(data) when is_binary(data) do
     init()
+
     case :ets.lookup(@table, {:sha512, data}) do
-      [{_, result}] -> result
+      [{_, result}] ->
+        result
+
       [] ->
         result = Apero.Crypto.Hash.sha512(data)
         :ets.insert(@table, {{:sha512, data}, result})
@@ -59,8 +67,11 @@ defmodule Apero.Cache.Crypto do
   """
   def md5(data) when is_binary(data) do
     init()
+
     case :ets.lookup(@table, {:md5, data}) do
-      [{_, result}] -> result
+      [{_, result}] ->
+        result
+
       [] ->
         result = Apero.Crypto.Hash.md5(data)
         :ets.insert(@table, {{:md5, data}, result})
@@ -69,34 +80,38 @@ defmodule Apero.Cache.Crypto do
   end
 
   # --- Delegated helpers
-  @doc """Delegate to cipher encryption.
+  @doc """
+  Delegate to cipher encryption.
   """
-  def encrypt(plaintext, key \ nil) do
+  def encrypt(plaintext, key \\ nil) do
     Apero.Crypto.Cipher.encrypt(plaintext, key)
   end
 
-  @doc """Delegate to cipher decryption.
+  @doc """
+  Delegate to cipher decryption.
   """
   def decrypt(ciphertext, key) do
     Apero.Crypto.Cipher.decrypt(ciphertext, key)
   end
 
-  @doc """Delegate to random generator.
+  @doc """
+  Delegate to random generator.
   """
   def random_hex(byte_count) do
     Apero.Crypto.Random.random_hex(byte_count)
   end
 
-  @doc """Delegate to random token generator.
+  @doc """
+  Delegate to random token generator.
   """
   def random_token(byte_count) do
     Apero.Crypto.Random.random_token(byte_count)
   end
 
-  @doc """Delegate to random password generator.
+  @doc """
+  Delegate to random password generator.
   """
-  def random_password(length \ 24, chars \ []) do
+  def random_password(length \\ 24, chars \\ []) do
     Apero.Crypto.Random.random_password(length, chars)
   end
-
 end

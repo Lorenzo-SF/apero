@@ -15,7 +15,7 @@ defmodule Apero.Cache.CryptoTest do
       # Ensure that the ETS table contains the key
       assert true
       id = :ets.lookup(:apero_crypto_cache, {:sha256, data})
-      assert [{ { :sha256, ^data }, _ }] = id
+      assert [{{:sha256, ^data}, _}] = id
     end
   end
 

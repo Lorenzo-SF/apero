@@ -68,6 +68,8 @@ Apero.Proc.vm_memory()                                    # => bytes
 
 ## Architecture
 
+<!-- Added `Apero.Cache.Crypto` module that adds caching to cryptographic helpers -->
+
 ```
 apero (pure stdlib)
   ├── File        — path ops, atomic I/O, trees, watcher GenServer
