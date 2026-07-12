@@ -79,7 +79,7 @@ defmodule Apero.Crypto do
 
   @deprecated "Use Apero.Crypto.Cipher.decrypt_chacha20/2 instead"
   @doc "Decrypts ChaCha20-Poly1305 encrypted data."
-  @spec decrypt_chacha20(binary(), binary()) :: {:ok, binary()} | :error
+  @spec decrypt_chacha20(binary(), binary()) :: {:ok, binary()} | {:error, term()}
   def decrypt_chacha20(encoded, key) when is_binary(encoded) and byte_size(key) == 32,
     do: Cipher.decrypt_chacha20(encoded, key)
 
@@ -197,16 +197,4 @@ defmodule Apero.Crypto do
     do: Random.secure_compare(a, b)
 
   def secure_compare(_, _), do: false
-
-  def start_link do
-    case :ets.whereis(:apero_cache_crypto) do
-      :undefined ->
-        :ets.new(:apero_cache_crypto, [:named_table, :public, :set, read_concurrency: true])
-
-      _ ->
-        :ok
-    end
-
-    :ok
-  end
 end

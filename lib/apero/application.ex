@@ -15,9 +15,9 @@ defmodule Apero.Application do
 
   @impl true
   def start(_type, _args) do
+    Crypto.init_table()
+
     children = []
-    Crypto.start_link()
-    # Ensure crypto cache ETS is initialized before supervision
 
     opts = [strategy: :one_for_one, name: Apero.Supervisor]
     Supervisor.start_link(children, opts)

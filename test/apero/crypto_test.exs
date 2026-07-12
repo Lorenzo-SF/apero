@@ -105,23 +105,20 @@ defmodule Apero.CryptoTest do
       key = :crypto.strong_rand_bytes(32)
       plaintext = "hello chacha"
       ciphertext = Cipher.encrypt_chacha20(plaintext, key)
-      # NOTE: decrypt_chacha20 returns the plaintext directly (not {:ok, plaintext})
-      # due to a spec/code mismatch — it delegates to :crypto.crypto_one_time_aead
-      # which returns plaintext on success, :error on failure
-      assert ^plaintext = Cipher.decrypt_chacha20(ciphertext, key)
+      assert {:ok, ^plaintext} = Cipher.decrypt_chacha20(ciphertext, key)
     end
 
-    test "wrong key returns :error" do
+    test "wrong key returns {:error, _}" do
       key = :crypto.strong_rand_bytes(32)
       wrong_key = :crypto.strong_rand_bytes(32)
       ciphertext = Cipher.encrypt_chacha20("data", key)
-      assert :error = Cipher.decrypt_chacha20(ciphertext, wrong_key)
+      assert {:error, _} = Cipher.decrypt_chacha20(ciphertext, wrong_key)
     end
 
-    test "corrupted data returns :error" do
+    test "corrupted data returns {:error, _}" do
       key = :crypto.strong_rand_bytes(32)
       ciphertext = Cipher.encrypt_chacha20("data", key)
-      assert :error = Cipher.decrypt_chacha20("garbage" <> ciphertext, key)
+      assert {:error, _} = Cipher.decrypt_chacha20("garbage" <> ciphertext, key)
     end
   end
 

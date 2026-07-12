@@ -1,6 +1,6 @@
 # Apero
 
-[![version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
+[![version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
 
 **Pure utility library for Elixir** — no shell execution. Provides file operations,
@@ -14,7 +14,7 @@ cryptography, environment/config handling, retry, cache, and pure OS/Proc intros
 ```elixir
 def deps do
   [
-    {:apero, "~> 3.0.0"}
+    {:apero, "~> 3.1.0"}
   ]
 end
 ```
@@ -69,7 +69,7 @@ Apero.Proc.vm_memory()                                    # => bytes
 
 ## Architecture
 
-<!-- Added `Apero.Cache.Crypto` module that adds caching to cryptographic helpers -->
+
 
 ```
 apero (pure stdlib)

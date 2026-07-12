@@ -92,7 +92,31 @@ defmodule Apero.Conf do
   @spec get(map(), String.t()) :: term()
   def get(config, key_path) when is_binary(key_path) do
     keys = String.split(key_path, ".")
-    get_in(config, Enum.map(keys, &String.to_atom/1))
+    deep_get(config, keys, &String.to_atom/1)
+  end
+
+  defp deep_get(map, [key], _to_atom) when is_map(map) do
+    case map do
+      %{^key => value} -> value
+      %{} -> Map.get(map, key_to_atom(key), nil)
+    end
+  end
+
+  defp deep_get(map, [key | rest], to_atom) when is_map(map) do
+    case map do
+      %{^key => sub} -> deep_get(sub, rest, to_atom)
+      %{} -> deep_get(Map.get(map, key_to_atom(key), %{}), rest, to_atom)
+    end
+  end
+
+  defp deep_get(_, _, _), do: nil
+
+  defp key_to_atom(key) do
+    String.to_existing_atom(key)
+  rescue
+    ArgumentError ->
+      # credo:disable-for-next-line Credo.Check.Warning.UnsafeToAtom
+      String.to_atom(key)
   end
 
   @doc """
@@ -108,7 +132,7 @@ defmodule Apero.Conf do
   @spec set(map(), String.t(), term()) :: map()
   def set(config, key_path, value) when is_binary(key_path) do
     keys = String.split(key_path, ".")
-    atoms = Enum.map(keys, &String.to_atom/1)
+    atoms = Enum.map(keys, &key_to_atom/1)
     put_in(config, atoms, value)
   end
 
