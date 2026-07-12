@@ -111,6 +111,13 @@ defmodule Apero.MixProject do
         "compile",
         "dialyzer",
         "test --cover"
+      ],
+      lint: [
+        "format",
+        "compile --warnings-as-errors",
+        "dialyzer",
+        "credo --strict --format=json",
+        "test --cover"
       ]
     ]
   end
