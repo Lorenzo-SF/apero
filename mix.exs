@@ -40,7 +40,7 @@ defmodule Apero.MixProject do
   def application do
     [
       mod: {Apero.Application, []},
-      extra_applications: [:logger, :runtime_tools, :crypto, :file_system, :public_key]
+      extra_applications: [:logger, :runtime_tools, :crypto, :file_system, :public_key, :finch]
     ]
   end
 
@@ -52,6 +52,7 @@ defmodule Apero.MixProject do
       {:dialyxir, ">= 1.0.0", only: [:dev, :test], runtime: false},
       {:jason, "~> 1.4"},
       {:file_system, "~> 1.0"},
+      {:finch, "~> 0.23"},
       {:yaml_elixir, "~> 2.9", optional: true},
       {:toml, "~> 0.7", optional: true}
     ]
@@ -86,7 +87,16 @@ defmodule Apero.MixProject do
         ],
         Environment: [Apero.Env, Apero.Conf],
         System: [Apero.OS, Apero.Proc],
-        "Retry & Cache": [Apero.Retry, Apero.Cache]
+        "Retry & Cache": [Apero.Retry, Apero.Cache],
+        HTTP: [
+          Apero.Http,
+          Apero.Http.Request,
+          Apero.Http.Response,
+          Apero.Http.Error,
+          Apero.Http.Method,
+          Apero.Http.Adapter,
+          Apero.Http.Finch
+        ]
       ],
       source_url: "https://github.com/Lorenzo-SF/apero",
       homepage_url: "https://github.com/Lorenzo-SF/apero",
