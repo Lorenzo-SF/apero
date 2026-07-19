@@ -114,9 +114,17 @@ defmodule Apero.Conf do
   defp key_to_atom(key) do
     String.to_existing_atom(key)
   rescue
-    ArgumentError ->
-      # credo:disable-for-next-line Credo.Check.Warning.UnsafeToAtom
-      String.to_atom(key)
+    ArgumentError -> atomize(key)
+  end
+
+  defp atomize(key) do
+    unless String.match?(key, ~r/^[a-zA-Z_][a-zA-Z0-9_]*$/) do
+      raise ArgumentError,
+            "cannot convert \"#{key}\" to atom: invalid characters (only letters, numbers, and underscores allowed)"
+    end
+
+    # credo:disable-for-next-line Credo.Check.Warning.UnsafeToAtom
+    String.to_atom(key)
   end
 
   @doc """

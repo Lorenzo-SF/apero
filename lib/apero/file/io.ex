@@ -53,23 +53,21 @@ defmodule Apero.File.IO do
   @spec checksum_many([binary()], :sha256 | :sha512 | :md5 | :sha) ::
           %{binary() => {:ok, binary()} | {:error, binary()}}
   def checksum_many(paths, algo \\ :sha256) when is_list(paths) do
-    indexed = Enum.with_index(paths)
-
-    indexed
+    paths
     |> Task.async_stream(
-      fn {p, idx} -> {idx, checksum(p, algo)} end,
+      fn p -> {p, checksum(p, algo)} end,
       max_concurrency: min(length(paths), 4),
       ordered: true
     )
     |> Enum.reduce(%{}, fn
-      {:ok, {idx, {:ok, result}}}, acc ->
-        Map.put(acc, Enum.at(paths, idx), {:ok, result})
+      {:ok, {path, {:ok, result}}}, acc ->
+        Map.put(acc, path, {:ok, result})
 
-      {:ok, {idx, {:error, reason}}}, acc ->
-        Map.put(acc, Enum.at(paths, idx), {:error, reason})
+      {:ok, {path, {:error, reason}}}, acc ->
+        Map.put(acc, path, {:error, reason})
 
-      {:exit, reason}, acc ->
-        Map.put(acc, :error, reason)
+      {:exit, _reason}, acc ->
+        acc
     end)
   end
 

@@ -129,11 +129,14 @@ defmodule Apero.File.Path do
   end
 
   @doc false
-  @spec mtime(binary()) :: {:ok, NaiveDateTime.t()} | {:error, File.posix()}
+  @spec mtime(binary()) :: {:ok, NaiveDateTime.t()} | {:error, term()}
   def mtime(path) do
     case File.stat(path, time: :posix) do
       {:ok, %{mtime: ts}} ->
-        {:ok, ts |> DateTime.from_unix!() |> DateTime.to_naive()}
+        case DateTime.from_unix(ts) do
+          {:ok, dt} -> {:ok, DateTime.to_naive(dt)}
+          {:error, reason} -> {:error, reason}
+        end
 
       {:error, reason} ->
         {:error, reason}
