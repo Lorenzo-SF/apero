@@ -37,6 +37,9 @@ defmodule Apero.Cache do
           :ets.insert(@adapters_table, {name, adapter})
         end
 
+        :ets.insert(@adapters_table, {pid, adapter})
+        Process.monitor(pid)
+
         {:ok, pid}
 
       {:error, reason} ->
@@ -86,7 +89,12 @@ defmodule Apero.Cache do
   # Private
   # ═══════════════════════════════════════════════════════════════════════
 
-  defp adapter(pid) when is_pid(pid), do: Apero.Cache.ETS
+  defp adapter(pid) when is_pid(pid) do
+    case :ets.lookup(@adapters_table, pid) do
+      [{^pid, mod}] -> mod
+      [] -> Apero.Cache.ETS
+    end
+  end
 
   defp adapter(atom) when is_atom(atom) do
     case :ets.lookup(@adapters_table, atom) do

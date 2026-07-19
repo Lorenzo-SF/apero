@@ -9,18 +9,51 @@ defmodule Apero.File.Tree do
   @doc false
   @spec generate_tree([binary()]) :: binary()
   def generate_tree(paths) when is_list(paths) do
-    sorted = Enum.sort(paths)
-    last_idx = length(sorted) - 1
-
-    sorted
-    |> Enum.with_index()
-    |> Enum.map_join("\n", fn {path, idx} ->
-      parts = Path.split(path)
-      indent = String.duplicate("  ", max(length(parts) - 1, 0))
-      connector = if idx == last_idx, do: "└─", else: "├─"
-      "#{indent}#{connector} #{Path.basename(path)}"
-    end)
+    paths
+    |> Enum.sort()
+    |> build_tree()
+    |> render_tree("", true)
+    |> String.trim_trailing()
   end
+
+  defp build_tree(paths) do
+    paths
+    |> Enum.reduce(%{}, fn path, tree ->
+      parts = Path.split(path)
+      insert_path(tree, parts)
+    end)
+    |> sort_tree()
+  end
+
+  defp insert_path(tree, [part]), do: Map.put(tree, part, %{})
+  defp insert_path(tree, [part | rest]), do: Map.update(tree, part, insert_path(%{}, rest), &insert_path(&1, rest))
+
+  defp sort_tree(tree) do
+    tree
+    |> Enum.sort_by(fn {k, _} -> k end)
+    |> Enum.map(fn {k, v} -> {k, sort_tree(v)} end)
+  end
+
+  defp render_tree([], _prefix, _is_last), do: ""
+
+  defp render_tree([{name, children}], prefix, _is_last) do
+    line = "#{prefix}└─ #{name}"
+    child_prefix = prefix <> "   "
+    children_str = render_tree(children, child_prefix, true)
+    join_lines(line, children_str)
+  end
+
+  defp render_tree([{name, children} | rest], prefix, _is_last) do
+    line = "#{prefix}├─ #{name}"
+    child_prefix = prefix <> "│  "
+    children_str = render_tree(children, child_prefix, false)
+    rest_str = render_tree(rest, prefix, false)
+    join_lines(line, join_lines(children_str, rest_str))
+  end
+
+  defp join_lines("", rest), do: rest
+  defp join_lines(line, ""), do: line
+  defp join_lines(line, rest), do: line <> "\n" <> rest
 
   @doc false
   @spec print_tree(binary()) :: :ok

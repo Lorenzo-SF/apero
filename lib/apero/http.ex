@@ -162,4 +162,5 @@ defmodule Apero.Http do
   defp method_builder(:patch), do: Apero.Http.Method.Patch
   defp method_builder(:delete), do: Apero.Http.Method.Delete
   defp method_builder(:query), do: Apero.Http.Method.Query
+  defp method_builder(other), do: raise(ArgumentError, "unsupported HTTP method: #{inspect(other)}")
 end

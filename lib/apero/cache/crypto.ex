@@ -51,14 +51,11 @@ defmodule Apero.Cache.Crypto do
   ## Helpers
 
   defp lookup_store(key, compute_fun) do
-    case :ets.lookup(@table, key) do
-      [{^key, value}] ->
-        value
+    value = compute_fun.()
 
-      [] ->
-        value = compute_fun.()
-        :ets.insert(@table, {key, value})
-        value
+    case :ets.insert_new(@table, {key, value}) do
+      true -> value
+      false -> :ets.lookup_element(@table, key, 2)
     end
   end
 end

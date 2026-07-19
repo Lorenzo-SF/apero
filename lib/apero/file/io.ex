@@ -17,12 +17,32 @@ defmodule Apero.File.IO do
 
     with :ok <- File.mkdir_p(dir),
          :ok <- File.write(tmp, content),
-         :ok <- File.rename(tmp, path) do
+         :ok <- commit_atomic_write(tmp, path) do
       :ok
     else
       {:error, reason} ->
         File.rm(tmp)
         {:error, "atomic_write failed for #{path}: #{reason}"}
+    end
+  end
+
+  defp commit_atomic_write(tmp, path) do
+    case File.rename(tmp, path) do
+      :ok ->
+        :ok
+
+      {:error, :exdev} ->
+        case File.copy(tmp, path) do
+          {:ok, _bytes} ->
+            File.rm(tmp)
+            :ok
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

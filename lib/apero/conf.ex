@@ -207,7 +207,11 @@ defmodule Apero.Conf do
   defp type_matches?(value, :list), do: is_list(value)
   defp type_matches?(value, :map), do: is_map(value)
   defp type_matches?(_value, :any), do: true
-  defp type_matches?(_value, _), do: true
+  defp type_matches?(_value, unknown_type) do
+    require Logger
+    Logger.warning("unknown schema type: #{inspect(unknown_type)}")
+    false
+  end
 
   defp type_of(value) when is_binary(value), do: "string"
   defp type_of(value) when is_integer(value), do: "integer"

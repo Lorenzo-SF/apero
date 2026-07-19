@@ -37,7 +37,7 @@ defmodule Apero.Proc do
 
   @doc "Returns the OS process ID of the BEAM VM."
   @spec os_pid() :: non_neg_integer()
-  def os_pid, do: :os.getpid() |> List.to_string() |> String.to_integer()
+  def os_pid, do: :os.getpid() |> List.to_integer()
 
   @doc "Returns the number of scheduler threads."
   @spec scheduler_count() :: non_neg_integer()

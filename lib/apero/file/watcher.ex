@@ -29,6 +29,7 @@ defmodule Apero.File.Watcher do
   @spec start_link(keyword() | map()) :: GenServer.on_start()
   def start_link(opts) when is_list(opts) do
     dirs = Keyword.fetch!(opts, :dirs)
+    if dirs == [], do: raise(ArgumentError, "dirs must be a non-empty list")
     callback = Keyword.fetch!(opts, :callback)
     debounce_ms = Keyword.get(opts, :debounce_ms, 100)
 
