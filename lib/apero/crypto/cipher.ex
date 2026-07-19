@@ -112,6 +112,4 @@ defmodule Apero.Crypto.Cipher do
   rescue
     e -> {:error, e}
   end
-
-
 end

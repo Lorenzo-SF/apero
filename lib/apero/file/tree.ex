@@ -26,7 +26,9 @@ defmodule Apero.File.Tree do
   end
 
   defp insert_path(tree, [part]), do: Map.put(tree, part, %{})
-  defp insert_path(tree, [part | rest]), do: Map.update(tree, part, insert_path(%{}, rest), &insert_path(&1, rest))
+
+  defp insert_path(tree, [part | rest]),
+    do: Map.update(tree, part, insert_path(%{}, rest), &insert_path(&1, rest))
 
   defp sort_tree(tree) do
     tree

@@ -207,6 +207,7 @@ defmodule Apero.Conf do
   defp type_matches?(value, :list), do: is_list(value)
   defp type_matches?(value, :map), do: is_map(value)
   defp type_matches?(_value, :any), do: true
+
   defp type_matches?(_value, unknown_type) do
     require Logger
     Logger.warning("unknown schema type: #{inspect(unknown_type)}")

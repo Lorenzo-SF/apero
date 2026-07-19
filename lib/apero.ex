@@ -48,7 +48,7 @@ defmodule Apero do
   """
 
   # Crypto
-  defdelegate encrypt(plaintext, key \\ nil), to: Apero.Crypto.Cipher
+  defdelegate encrypt(plaintext, key), to: Apero.Crypto.Cipher
   defdelegate decrypt(encoded, key), to: Apero.Crypto.Cipher
   defdelegate sha256(data), to: Apero.Crypto.Hash
   defdelegate sha512(data), to: Apero.Crypto.Hash

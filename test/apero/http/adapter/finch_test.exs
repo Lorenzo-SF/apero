@@ -16,6 +16,7 @@ defmodule Apero.Http.Adapter.FinchTest do
   describe "request/1" do
     test "sends a GET request and decodes JSON response" do
       bypass = Bypass.open()
+
       Bypass.expect(bypass, fn conn ->
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
@@ -37,9 +38,11 @@ defmodule Apero.Http.Adapter.FinchTest do
 
     test "sends a POST request with JSON body" do
       bypass = Bypass.open()
+
       Bypass.expect(bypass, fn conn ->
         {:ok, body, _} = Plug.Conn.read_body(conn)
         assert body =~ "hello"
+
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
         |> Plug.Conn.resp(201, ~s({"created":true}))
@@ -60,6 +63,7 @@ defmodule Apero.Http.Adapter.FinchTest do
 
     test "handles text/plain response without JSON decoding" do
       bypass = Bypass.open()
+
       Bypass.expect(bypass, fn conn ->
         conn
         |> Plug.Conn.put_resp_content_type("text/plain")
@@ -113,6 +117,7 @@ defmodule Apero.Http.Adapter.FinchTest do
   describe "stream/4" do
     test "streams a response via callback returning {:ok, acc}" do
       bypass = Bypass.open()
+
       Bypass.expect(bypass, fn conn ->
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
@@ -144,5 +149,3 @@ defmodule Apero.Http.Adapter.FinchTest do
     end
   end
 end
-
-

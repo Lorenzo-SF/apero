@@ -36,9 +36,6 @@ defmodule Apero.Http.Adapter.Finch do
         {:ok, acc} ->
           {:ok, acc}
 
-        {:error, exception} ->
-          {:error, Apero.Http.Error.from_finch_error(exception)}
-
         {:error, exception, _acc} ->
           {:error, Apero.Http.Error.from_finch_error(exception)}
       end
