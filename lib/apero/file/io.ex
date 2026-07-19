@@ -1,4 +1,6 @@
 defmodule Apero.File.IO do
+  require Logger
+
   @moduledoc """
   I/O operations: atomic writes, checksums, temporary resources, file locking.
 
@@ -152,8 +154,8 @@ defmodule Apero.File.IO do
     dest_dir = Path.dirname(dest)
 
     with :ok <- File.mkdir_p(dest_dir),
-         {:ok, _bytes} <- File.copy(source, dest) do
-      {:ok, 0}
+         {:ok, bytes} <- File.copy(source, dest) do
+      {:ok, bytes}
     else
       {:error, reason} -> {:error, "Cannot copy #{source} to #{dest}: #{reason}"}
     end
@@ -179,6 +181,7 @@ defmodule Apero.File.IO do
           acquire_lock(lock_path, deadline, retry_ms, fun)
 
         {:error, reason} ->
+          Logger.warning("with_lock failed for #{lock_path}: #{inspect(reason)}")
           {:error, "Cannot acquire lock #{lock_path}: #{reason}"}
       end
     end

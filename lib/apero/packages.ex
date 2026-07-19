@@ -93,7 +93,7 @@ defmodule Apero.Packages do
 
   # ── Helpers ──────────────────────────────────────────────────────────
 
-  defp manager_binary(:apt), do: "apt-get"
+  defp manager_binary(:apt), do: "apt"
   defp manager_binary(:apt_get), do: "apt-get"
   defp manager_binary(:brew), do: "brew"
   defp manager_binary(:pacman), do: "pacman"

@@ -133,9 +133,7 @@ defmodule Apero.Retry do
 
   defp calculate_delay(attempt, base, max) do
     exponential = round(base * :math.pow(2, attempt - 1))
-    jitter_range = max(1, round(exponential * 0.3))
-    jitter = :rand.uniform(jitter_range)
-    min(exponential + jitter, max)
+    max(1, round(:rand.uniform() * min(exponential, max)))
   end
 
   defp default_retry?({:error, _}), do: true

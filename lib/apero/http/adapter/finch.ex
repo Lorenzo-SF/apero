@@ -30,7 +30,7 @@ defmodule Apero.Http.Adapter.Finch do
     Apero.Http.Finch.ensure_started()
 
     with {:ok, finch_req} <- to_finch_request(req) do
-      finch_opts = to_finch_opts(opts)
+      finch_opts = to_finch_opts(opts, :stream)
 
       case Finch.stream(finch_req, Apero.Http.Finch, acc, fun, finch_opts) do
         {:ok, acc} ->
@@ -87,6 +87,12 @@ defmodule Apero.Http.Adapter.Finch do
   end
 
   defp to_finch_opts(opts) do
+    timeout = Keyword.get(opts, :receive_timeout, 30_000)
+    pool_timeout = Keyword.get(opts, :pool_timeout, 5_000)
+    [receive_timeout: timeout, pool_timeout: pool_timeout]
+  end
+
+  defp to_finch_opts(opts, :stream) do
     timeout = Keyword.get(opts, :receive_timeout, 30_000)
     pool_timeout = Keyword.get(opts, :pool_timeout, 5_000)
     [receive_timeout: timeout, pool_timeout: pool_timeout]
