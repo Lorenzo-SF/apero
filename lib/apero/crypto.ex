@@ -57,8 +57,8 @@ defmodule Apero.Crypto do
 
   @deprecated "Use Apero.Crypto.Cipher.encrypt/2 instead"
   @doc "Encrypts plaintext with AES-256-GCM. Returns `{:ok, ciphertext}`."
-  @spec encrypt(binary(), binary() | nil) :: {:ok, binary()}
-  def encrypt(plaintext, key \\ nil) when is_binary(plaintext),
+  @spec encrypt(binary(), binary()) :: {:ok, binary()}
+  def encrypt(plaintext, key) when is_binary(plaintext),
     do: Cipher.encrypt(plaintext, key)
 
   @deprecated "Use Apero.Crypto.Cipher.decrypt/2 instead"
@@ -113,7 +113,7 @@ defmodule Apero.Crypto do
 
   @deprecated "Use Apero.Crypto.Cipher.decrypt_ctr/3 instead"
   @doc "Decrypts data encrypted with AES-256-CTR streaming."
-  @spec decrypt_ctr(binary(), binary(), binary()) :: {:ok, binary()} | :error
+  @spec decrypt_ctr(binary(), binary(), binary()) :: {:ok, binary()} | {:error, term()}
   def decrypt_ctr(ciphertext, key, iv) when byte_size(key) == 32 and byte_size(iv) == 16,
     do: Cipher.decrypt_ctr(ciphertext, key, iv)
 

@@ -11,16 +11,6 @@ defmodule Apero.CryptoTest do
       assert {:ok, ^plaintext} = Cipher.decrypt(ciphertext, key)
     end
 
-    test "roundtrip with key: nil (auto-generated key)" do
-      plaintext = "secret data"
-      assert {:ok, _ciphertext} = Cipher.encrypt(plaintext, nil)
-    end
-
-    test "roundtrip with default nil key" do
-      plaintext = "secret data"
-      assert {:ok, _ciphertext} = Cipher.encrypt(plaintext)
-    end
-
     test "wrong key returns error" do
       key = Random.generate_key()
       wrong_key = Random.generate_key()

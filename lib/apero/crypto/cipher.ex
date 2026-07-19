@@ -9,7 +9,6 @@ defmodule Apero.Crypto.Cipher do
   Base64-encoded) and use `:crypto.strong_rand_bytes/1` for key/IV generation.
   """
 
-  @aes_key_bytes 32
   @iv_bytes 12
   @tag_bytes 16
 
@@ -18,9 +17,8 @@ defmodule Apero.Crypto.Cipher do
   # ═══════════════════════════════════════════════════════════════════════
 
   @doc "Encrypts plaintext with AES-256-GCM. Returns `{:ok, ciphertext}`."
-  @spec encrypt(binary(), binary() | nil) :: {:ok, binary()}
-  def encrypt(plaintext, key \\ nil) when is_binary(plaintext) do
-    key = key || generate_key()
+  @spec encrypt(binary(), binary()) :: {:ok, binary()}
+  def encrypt(plaintext, key) when is_binary(plaintext) and byte_size(key) == 32 do
     iv = :crypto.strong_rand_bytes(@iv_bytes)
     {ciphertext, tag} = :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv, plaintext, "", true)
     result = Base.encode64(iv <> tag <> ciphertext)
@@ -105,17 +103,15 @@ defmodule Apero.Crypto.Cipher do
   @dialyzer {:nowarn_function, decrypt_ctr: 3}
 
   @doc "Decrypts data encrypted with AES-256-CTR streaming."
-  @spec decrypt_ctr(binary(), binary(), binary()) :: {:ok, binary()} | :error
+  @spec decrypt_ctr(binary(), binary(), binary()) :: {:ok, binary()} | {:error, term()}
   def decrypt_ctr(ciphertext, key, iv) when byte_size(key) == 32 and byte_size(iv) == 16 do
     state = :crypto.crypto_init(:aes_256_ctr, key, iv, false)
     plaintext = :crypto.crypto_update(state, ciphertext)
     final = :crypto.crypto_final(state)
     {:ok, plaintext <> final}
   rescue
-    _ -> :error
+    e -> {:error, e}
   end
 
-  # ── Private ────────────────────────────────────────────────────────
 
-  defp generate_key, do: :crypto.strong_rand_bytes(@aes_key_bytes)
 end

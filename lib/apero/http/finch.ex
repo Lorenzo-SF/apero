@@ -1,4 +1,6 @@
 defmodule Apero.Http.Finch do
+  require Logger
+
   @moduledoc """
   Manages the lifecycle of the Finch HTTP pool used by `Apero.Http`.
 
@@ -36,13 +38,13 @@ defmodule Apero.Http.Finch do
 
     case Finch.start_link(name: @finch_name, pools: pools) do
       {:ok, _pid} ->
-        Process.sleep(50)
         :ok
 
       {:error, {:already_started, _pid}} ->
         :ok
 
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.error("Finch failed to start: #{inspect(reason)}")
         :ok
     end
   end
