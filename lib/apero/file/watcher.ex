@@ -26,6 +26,13 @@ defmodule Apero.File.Watcher do
     }
   end
 
+  @doc """
+  Starts a watcher GenServer for the given `:dirs` (non-empty list of
+  paths) and `:callback` (function invoked with debounced batches of
+  `{path, events}` tuples).
+
+  Optional `:debounce_ms` (default `100`) and `:name` are supported.
+  """
   @spec start_link(keyword() | map()) :: GenServer.on_start()
   def start_link(opts) when is_list(opts) do
     dirs = Keyword.fetch!(opts, :dirs)

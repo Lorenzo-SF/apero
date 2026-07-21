@@ -48,19 +48,33 @@ defmodule Apero do
   """
 
   # Crypto
+  @doc "Delegates to `Apero.Crypto.Cipher.encrypt/2`."
   defdelegate encrypt(plaintext, key), to: Apero.Crypto.Cipher
+
+  @doc "Delegates to `Apero.Crypto.Cipher.decrypt/2`."
   defdelegate decrypt(encoded, key), to: Apero.Crypto.Cipher
+
+  @doc "Delegates to `Apero.Crypto.Hash.sha256/1` (cached in ETS)."
   defdelegate sha256(data), to: Apero.Crypto.Hash
+
+  @doc "Delegates to `Apero.Crypto.Hash.sha512/1`."
   defdelegate sha512(data), to: Apero.Crypto.Hash
+
+  @doc "Delegates to `Apero.Crypto.Hash.md5/1`."
   defdelegate md5(data), to: Apero.Crypto.Hash
 
   # Env
+  @doc "Delegates to `Apero.Env.get/2`."
   defdelegate get_env(key, default \\ nil), to: Apero.Env, as: :get
+
+  @doc "Delegates to `Apero.Env.put/2`."
   defdelegate put_env(key, value), to: Apero.Env, as: :put
 
   # OS
+  @doc "Delegates to `Apero.OS.type/0`."
   defdelegate os_type(), to: Apero.OS, as: :type
 
   # Retry
+  @doc "Delegates to `Apero.Retry.with/2`."
   defdelegate retry(fun, opts \\ []), to: Apero.Retry, as: :with
 end

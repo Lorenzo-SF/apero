@@ -91,40 +91,41 @@ defmodule Apero.Conf do
   """
   @spec get(map(), String.t()) :: term()
   def get(config, key_path) when is_binary(key_path) do
-    keys = String.split(key_path, ".")
-    deep_get(config, keys, &String.to_atom/1)
+    deep_get(config, String.split(key_path, "."))
   end
 
-  defp deep_get(map, [key], _to_atom) when is_map(map) do
-    case map do
-      %{^key => value} -> value
-      %{} -> Map.get(map, key_to_atom(key), nil)
+  defp deep_get(map, [key]) when is_map(map) do
+    case existing_key(map, key) do
+      nil -> nil
+      actual_key -> Map.fetch!(map, actual_key)
     end
   end
 
-  defp deep_get(map, [key | rest], to_atom) when is_map(map) do
-    case map do
-      %{^key => sub} -> deep_get(sub, rest, to_atom)
-      %{} -> deep_get(Map.get(map, key_to_atom(key), %{}), rest, to_atom)
+  defp deep_get(map, [key | rest]) when is_map(map) do
+    case existing_key(map, key) do
+      nil -> nil
+      actual_key -> deep_get(Map.fetch!(map, actual_key), rest)
     end
   end
 
-  defp deep_get(_, _, _), do: nil
+  defp deep_get(_, _), do: nil
 
-  defp key_to_atom(key) do
-    String.to_existing_atom(key)
-  rescue
-    ArgumentError -> atomize(key)
+  defp existing_key(map, key) do
+    if Map.has_key?(map, key) do
+      key
+    else
+      find_atom_key(map, key)
+    end
   end
 
-  defp atomize(key) do
-    unless String.match?(key, ~r/^[a-zA-Z_][a-zA-Z0-9_]*$/) do
-      raise ArgumentError,
-            "cannot convert \"#{key}\" to atom: invalid characters (only letters, numbers, and underscores allowed)"
-    end
+  defp find_atom_key(map, key) do
+    Enum.find_value(map, fn
+      {candidate, _value} when is_atom(candidate) ->
+        if Atom.to_string(candidate) == key, do: candidate
 
-    # credo:disable-for-next-line Credo.Check.Warning.UnsafeToAtom
-    String.to_atom(key)
+      _other ->
+        nil
+    end)
   end
 
   @doc """
@@ -140,8 +141,31 @@ defmodule Apero.Conf do
   @spec set(map(), String.t(), term()) :: map()
   def set(config, key_path, value) when is_binary(key_path) do
     keys = String.split(key_path, ".")
-    atoms = Enum.map(keys, &key_to_atom/1)
-    put_in(config, atoms, value)
+    deep_set(config, keys, value)
+  end
+
+  defp deep_set(map, [key], value) when is_map(map) do
+    Map.put(map, key_to_existing_or_string(key), value)
+  end
+
+  defp deep_set(map, [key | rest], value) when is_map(map) do
+    lookup = key_to_existing_or_string(key)
+
+    sub =
+      case Map.fetch(map, lookup) do
+        {:ok, existing} when is_map(existing) -> existing
+        _ -> %{}
+      end
+
+    Map.put(map, lookup, deep_set(sub, rest, value))
+  end
+
+  defp deep_set(_, _, _), do: %{}
+
+  defp key_to_existing_or_string(key) when is_binary(key) do
+    String.to_existing_atom(key)
+  rescue
+    ArgumentError -> key
   end
 
   @doc "Validates a config map against a schema map (shallow key-type check)."

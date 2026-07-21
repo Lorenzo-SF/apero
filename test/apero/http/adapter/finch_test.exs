@@ -7,6 +7,7 @@ defmodule Apero.Http.Adapter.FinchTest do
 
   alias Apero.Http.Adapter.Finch
   alias Apero.Http.Request
+  alias Plug.Conn
 
   setup do
     Apero.Http.Finch.ensure_started()
@@ -19,8 +20,8 @@ defmodule Apero.Http.Adapter.FinchTest do
 
       Bypass.expect(bypass, fn conn ->
         conn
-        |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(200, ~s({"status":"ok"}))
+        |> Conn.put_resp_content_type("application/json")
+        |> Conn.resp(200, ~s({"status":"ok"}))
       end)
 
       req = %Request{
@@ -40,12 +41,12 @@ defmodule Apero.Http.Adapter.FinchTest do
       bypass = Bypass.open()
 
       Bypass.expect(bypass, fn conn ->
-        {:ok, body, _} = Plug.Conn.read_body(conn)
+        {:ok, body, _} = Conn.read_body(conn)
         assert body =~ "hello"
 
         conn
-        |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(201, ~s({"created":true}))
+        |> Conn.put_resp_content_type("application/json")
+        |> Conn.resp(201, ~s({"created":true}))
       end)
 
       req = %Request{
@@ -66,8 +67,8 @@ defmodule Apero.Http.Adapter.FinchTest do
 
       Bypass.expect(bypass, fn conn ->
         conn
-        |> Plug.Conn.put_resp_content_type("text/plain")
-        |> Plug.Conn.resp(200, "plain text response")
+        |> Conn.put_resp_content_type("text/plain")
+        |> Conn.resp(200, "plain text response")
       end)
 
       req = %Request{
@@ -120,8 +121,8 @@ defmodule Apero.Http.Adapter.FinchTest do
 
       Bypass.expect(bypass, fn conn ->
         conn
-        |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(200, ~s({"chunked":true}))
+        |> Conn.put_resp_content_type("application/json")
+        |> Conn.resp(200, ~s({"chunked":true}))
       end)
 
       req = %Request{

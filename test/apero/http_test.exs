@@ -1,7 +1,16 @@
 defmodule Apero.HttpTest do
   use ExUnit.Case, async: false
 
-  alias Apero.Http.{Request, Response, Error}
+  alias Apero.Http.Adapter.Finch, as: FinchAdapter
+  alias Apero.Http.Error
+  alias Apero.Http.Method.Delete
+  alias Apero.Http.Method.Get
+  alias Apero.Http.Method.Patch
+  alias Apero.Http.Method.Post
+  alias Apero.Http.Method.Put
+  alias Apero.Http.Method.Query
+  alias Apero.Http.Request
+  alias Apero.Http.Response
 
   describe "Request struct" do
     test "builds a basic request with required fields" do
@@ -98,12 +107,12 @@ defmodule Apero.HttpTest do
   describe "Method behaviour" do
     test "all built-in methods implement the behaviour" do
       methods = [
-        Apero.Http.Method.Get,
-        Apero.Http.Method.Post,
-        Apero.Http.Method.Put,
-        Apero.Http.Method.Patch,
-        Apero.Http.Method.Delete,
-        Apero.Http.Method.Query
+        Get,
+        Post,
+        Put,
+        Patch,
+        Delete,
+        Query
       ]
 
       for module <- methods do
@@ -124,7 +133,7 @@ defmodule Apero.HttpTest do
 
   describe "Get.build/1" do
     test "builds a request with method :get and no body" do
-      req = Apero.Http.Method.Get.build(url: "https://example.com", headers: [{"x", "y"}])
+      req = Get.build(url: "https://example.com", headers: [{"x", "y"}])
 
       assert req.method == :get
       assert req.url == "https://example.com"
@@ -137,14 +146,14 @@ defmodule Apero.HttpTest do
     test "builds a request with method :post and body" do
       body = %{key: "value"}
 
-      req = Apero.Http.Method.Post.build(url: "https://example.com", body: body)
+      req = Post.build(url: "https://example.com", body: body)
 
       assert req.method == :post
       assert req.body == body
     end
 
     test "accepts a body of nil" do
-      req = Apero.Http.Method.Post.build(url: "https://example.com")
+      req = Post.build(url: "https://example.com")
 
       assert req.method == :post
       assert req.body == nil
@@ -153,7 +162,7 @@ defmodule Apero.HttpTest do
 
   describe "Put.build/1" do
     test "builds a request with method :put" do
-      req = Apero.Http.Method.Put.build(url: "https://example.com", body: %{a: 1})
+      req = Put.build(url: "https://example.com", body: %{a: 1})
 
       assert req.method == :put
       assert req.body == %{a: 1}
@@ -162,7 +171,7 @@ defmodule Apero.HttpTest do
 
   describe "Patch.build/1" do
     test "builds a request with method :patch" do
-      req = Apero.Http.Method.Patch.build(url: "https://example.com", body: %{a: 1})
+      req = Patch.build(url: "https://example.com", body: %{a: 1})
 
       assert req.method == :patch
     end
@@ -170,7 +179,7 @@ defmodule Apero.HttpTest do
 
   describe "Delete.build/1" do
     test "builds a request with method :delete and no body by default" do
-      req = Apero.Http.Method.Delete.build(url: "https://example.com")
+      req = Delete.build(url: "https://example.com")
 
       assert req.method == :delete
       assert req.body == nil
@@ -178,7 +187,7 @@ defmodule Apero.HttpTest do
 
     test "accepts an optional body" do
       req =
-        Apero.Http.Method.Delete.build(url: "https://example.com", body: %{reason: "obsolete"})
+        Delete.build(url: "https://example.com", body: %{reason: "obsolete"})
 
       assert req.body == %{reason: "obsolete"}
     end
@@ -186,7 +195,7 @@ defmodule Apero.HttpTest do
 
   describe "Query.build/1" do
     test "builds a request with method :query and body" do
-      req = Apero.Http.Method.Query.build(url: "https://example.com", body: %{q: "search"})
+      req = Query.build(url: "https://example.com", body: %{q: "search"})
 
       assert req.method == :query
       assert req.body == %{q: "search"}
@@ -195,8 +204,8 @@ defmodule Apero.HttpTest do
 
   describe "Adapter behaviour" do
     test "default adapter is Finch" do
-      assert Application.get_env(:apero, :http_adapter, Apero.Http.Adapter.Finch) ==
-               Apero.Http.Adapter.Finch
+      assert Application.get_env(:apero, :http_adapter, FinchAdapter) ==
+               FinchAdapter
     end
   end
 

@@ -23,6 +23,25 @@ defmodule Apero.Retry do
 
   @type predicate :: (any() -> boolean())
 
+  @doc """
+  Runs `fun` with exponential backoff + jitter retries.
+
+  Returns the first result for which `retry_on` (default: `{:error, _}` or
+  HTTP status ≥ 500) returns `false`. If `fun` keeps producing retriable
+  results past `max_attempts`, the last result is returned.
+
+  Blocks the caller for the duration of the backoff via `Process.sleep`;
+  use `schedule_next/7` for non-blocking retries from a GenServer.
+
+  ## Options
+
+    * `:max_attempts` — total attempts (default `3`)
+    * `:base_delay` — initial delay in ms (default `100`)
+    * `:max_delay` — cap on delay between attempts in ms (default `30_000`)
+    * `:retry_on` — `(result -> boolean())` predicate; retry when `true`
+    * `:on_retry` — `(%{attempt: integer(), result: any(), delay: integer()} -> any())`
+      invoked before each sleep (or send-after)
+  """
   @spec with((-> any()), keyword()) :: any()
   def with(fun, opts \\ []) do
     max_attempts = Keyword.get(opts, :max_attempts, @default_max_attempts)
@@ -58,7 +77,7 @@ defmodule Apero.Retry do
           integer(),
           integer(),
           (any() -> boolean()),
-          (-> any())
+          (map() -> any())
         ) :: :ok
   def schedule_next(fun, attempt, max, base, max_d, should_retry?, on_retry) do
     if attempt < max do
@@ -87,7 +106,7 @@ defmodule Apero.Retry do
   """
   @spec handle_message(
           {:apero_retry, (-> any()), integer(), integer(), integer(), integer(),
-           (any() -> boolean()), (-> any())}
+           (any() -> boolean()), (map() -> any())}
         ) :: any()
   def handle_message({:apero_retry, fun, attempt, max, base, max_d, should_retry?, on_retry}) do
     result = fun.()

@@ -8,43 +8,46 @@ defmodule Apero.Http.Adapter.Finch do
 
   @behaviour Apero.Http.Adapter
 
+  alias Apero.Http.{Error, Request, Response}
+  alias Apero.Http.Finch, as: FinchPool
+
   @impl true
-  def request(%Apero.Http.Request{} = req) do
-    Apero.Http.Finch.ensure_started()
+  def request(%Request{} = req) do
+    FinchPool.ensure_started()
 
     with {:ok, finch_req} <- to_finch_request(req) do
       finch_opts = to_finch_opts(req.options)
 
-      case Finch.request(finch_req, Apero.Http.Finch, finch_opts) do
+      case Finch.request(finch_req, FinchPool, finch_opts) do
         {:ok, %Finch.Response{} = finch_resp} ->
           {:ok, to_finch_response(finch_resp)}
 
         {:error, exception} ->
-          {:error, Apero.Http.Error.from_finch_error(exception)}
+          {:error, Error.from_finch_error(exception)}
       end
     end
   end
 
   @impl true
-  def stream(%Apero.Http.Request{} = req, acc, fun, opts \\ []) do
-    Apero.Http.Finch.ensure_started()
+  def stream(%Request{} = req, acc, fun, opts \\ []) do
+    FinchPool.ensure_started()
 
     with {:ok, finch_req} <- to_finch_request(req) do
       finch_opts = to_finch_opts(opts, :stream)
 
-      case Finch.stream(finch_req, Apero.Http.Finch, acc, fun, finch_opts) do
+      case Finch.stream(finch_req, FinchPool, acc, fun, finch_opts) do
         {:ok, acc} ->
           {:ok, acc}
 
         {:error, exception, _acc} ->
-          {:error, Apero.Http.Error.from_finch_error(exception)}
+          {:error, Error.from_finch_error(exception)}
       end
     end
   end
 
   # ── Internals ────────────────────────────────────────────────────────────
 
-  defp to_finch_request(%Apero.Http.Request{
+  defp to_finch_request(%Request{
          method: method,
          url: url,
          headers: headers,
@@ -62,7 +65,7 @@ defmodule Apero.Http.Adapter.Finch do
 
   defp to_finch_response(%Finch.Response{status: status, headers: headers, body: body}) do
     decoded_body = maybe_decode_json(body, headers)
-    %Apero.Http.Response{status: status, headers: headers, body: decoded_body}
+    %Response{status: status, headers: headers, body: decoded_body}
   end
 
   defp maybe_decode_json(body, headers) do
