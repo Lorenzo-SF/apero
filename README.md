@@ -38,7 +38,8 @@ Apero.File.generate_tree(["lib/", "test/"])               # => ASCII tree
 Apero.Crypto.sha256("data")                               # => hex digest
 Apero.Crypto.random_hex(16)                               # => random token
 *`sha256/1`, `sha512/1`, and `md5/1` results are now cached in ETS for faster repeated calls.*
-{:ok, ct} = Apero.Crypto.encrypt("secret")                # AES-256-GCM
+key = Apero.Crypto.generate_key()                          # 32-byte AES key
+{:ok, ct} = Apero.Crypto.encrypt("secret", key)           # AES-256-GCM
 {:ok, pt} = Apero.Crypto.decrypt(ct, key)
 ```
 

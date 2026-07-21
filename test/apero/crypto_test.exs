@@ -258,8 +258,8 @@ defmodule Apero.CryptoTest do
       assert secret_a == secret_b
     end
 
-    test "returns :error for invalid keys" do
-      assert :error = Key.compute_ecdh_secret(<<0::256>>, <<0::256>>)
+    test "returns {:error, _} for invalid keys" do
+      assert {:error, _reason} = Key.compute_ecdh_secret(<<0::256>>, <<0::256>>)
     end
   end
 

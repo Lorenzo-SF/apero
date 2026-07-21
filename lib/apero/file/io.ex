@@ -140,7 +140,7 @@ defmodule Apero.File.IO do
     |> Task.async_stream(
       fn {pair, _idx} -> copy_pair(pair) end,
       max_concurrency: min(length(pairs), 8),
-      ordered: false
+      ordered: true
     )
     |> Enum.map(fn
       {:ok, result} -> result

@@ -57,14 +57,15 @@ defmodule Apero.Crypto do
 
   @deprecated "Use Apero.Crypto.Cipher.encrypt/2 instead"
   @doc "Encrypts plaintext with AES-256-GCM. Returns `{:ok, ciphertext}`."
-  @spec encrypt(binary(), binary()) :: {:ok, binary()}
-  def encrypt(plaintext, key) when is_binary(plaintext),
-    do: Cipher.encrypt(plaintext, key)
+  @spec encrypt(binary(), binary()) :: {:ok, binary()} | {:error, term()}
+  def encrypt(plaintext, key) when is_binary(plaintext) and byte_size(key) == 32 do
+    Cipher.encrypt(plaintext, key)
+  end
 
   @deprecated "Use Apero.Crypto.Cipher.decrypt/2 instead"
   @doc "Decrypts a value encrypted with `encrypt/2`. Returns `{:ok, plaintext}` or `{:error, reason}`."
   @spec decrypt(binary(), binary()) :: {:ok, binary()} | {:error, term()}
-  def decrypt(encoded, key) when is_binary(encoded) and is_binary(key),
+  def decrypt(encoded, key) when is_binary(encoded) and byte_size(key) == 32,
     do: Cipher.decrypt(encoded, key)
 
   # ═══════════════════════════════════════════════════════════════════════
@@ -129,7 +130,7 @@ defmodule Apero.Crypto do
 
   @deprecated "Use Apero.Crypto.Key.compute_ecdh_secret/2 instead"
   @doc "Computes a shared secret from your private key and peer's public key."
-  @spec compute_ecdh_secret(binary(), binary()) :: {:ok, binary()} | :error
+  @spec compute_ecdh_secret(binary(), binary()) :: {:ok, binary()} | {:error, term()}
   def compute_ecdh_secret(my_private, peer_public),
     do: Key.compute_ecdh_secret(my_private, peer_public)
 
