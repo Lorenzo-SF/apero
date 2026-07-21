@@ -1,5 +1,5 @@
 defmodule Apero.HttpTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias Apero.Http.{Request, Response, Error}
 
