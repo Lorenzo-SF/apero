@@ -1,9 +1,9 @@
 # Apero v3.1.0 — Code Quality Audit
 
-> **Audit date:** 2026-07-19
+> **Audit date:** 2026-07-21
 > **Project:** `apero` — Foundation utility library for Lorenzo-SF ecosystem
-> **Lines of code:** 3,229 (lib/) + 1,344 (test/) = 4,573 total
-> **Test suites:** 10 test files, 161 tests
+> **Lines of code:** ~3,500 (lib/) + ~1,500 (test/)
+> **Test suites:** 11 test files, 172 tests
 
 ---
 
@@ -11,17 +11,14 @@
 
 | Metric | Value |
 |---|---|
-| **Test count** | 161 passing, 0 failing |
-| **Test coverage** | **44.6%** (TOTAL) |
+| **Test count** | 172 passing, 0 failing |
+| **Test coverage** | **48.7%** (TOTAL) |
 | **Threshold** | 80% (configured in `mix.exs`) |
 | **Credo violations** | **0** (clean) |
-| **Modules** | 37 (lib/) |
-| **Modules ≥ 80% coverage** | 12 (32%) |
-| **Modules with 0% coverage** | 15 (41%) |
-| **P0 (🔴 Critical)** | 4 |
-| **P1 (🟠 High)** | 7 |
-| **P2 (🟡 Medium)** | 11 |
-| **P3 (🟢 Low)** | 10 |
+| **Dialyzer errors** | **0** |
+| **Modules** | 38 (lib/) |
+| **Public functions with `@doc`** | 100% (audited) |
+| **Atomic atoms in code** | None (Conf uses `String.to_existing_atom` + string fallback) |
 
 ---
 
@@ -448,7 +445,46 @@ Using `DateTime.to_naive/1` discards timezone. File mtimes are typically UTC. Sh
 | `Apero.Packages` | 0.0% | 22 | 22 | ❌ |
 | `Apero.Proc` | 100.0% | 11 | 0 | ✅ |
 | `Apero.Retry` | 65.7% | 35 | 12 | ⚠️ |
-| **TOTAL** | **44.6%** | **708** | **393** | **⚠️** |
+| **TOTAL** | **48.7%** | **~810** | **~415** | **⚠️** |
+
+---
+
+## 🆕 Status snapshot — 2026-07-21
+
+After the v3.1.0 fix branches were merged (commits `e07d964` → `8e9c2f5` → `3c6bf0e`),
+the audit was re-run on `fix-tools-domains`:
+
+| Pipeline step | Result |
+|---|---|
+| `mix format` | clean, no diff |
+| `mix compile --warnings-as-errors` | exit 0 |
+| `mix credo --strict --format=json` | 0 issues |
+| `mix test --cover` | 172 tests, 0 failures, **48.7%** |
+| `mix dialyzer` | 0 errors |
+
+### Resolved in this branch (`3c6bf0e`)
+
+* `P1-1` — `Apero.Conf` no longer falls back to `String.to_atom`; it uses
+  `String.to_existing_atom/1` and preserves string keys when no atom exists.
+* Public-function docs now cover every exported `def`/`defdelegate` in the
+  `Apero`, `Apero.Retry`, and `Apero.File.Watcher` modules (11 functions).
+* `Apero.Retry.schedule_next/7` and `handle_message/1` `@spec` were
+  tightened (the `on_retry` callback actually takes a map, not arity 0).
+* `Apero.HttpTest` was made synchronous (`async: false`) so the
+  globally-named Finch pool does not race between the
+  `Finch lifecycle` and `request/1 returns {:error, _}` tests.
+
+### Still open (out of scope for this branch)
+
+* `P0-2` — `lib/apero/http/finch.ex` already removed the
+  `Process.sleep(50)`; the audit entry is now historical.
+* Facade modules (`Apero`, `Apero.File`, `Apero.Http`, `Apero.Network`,
+  `Apero.Packages`, `Apero.OS`) still have 0% line coverage because the
+  test suite exercises their submodules directly. Follow-up: add a
+  `test/apero_test.exs` that hits the facade delegates.
+* `Apero.OS.wsl?/0` PATH heuristic was already replaced with
+  `/proc/sys/fs/binfmt_misc/WSLInterop` + `/proc/version` checks in commit
+  `223adad`; the audit entry is now historical.
 
 ---
 

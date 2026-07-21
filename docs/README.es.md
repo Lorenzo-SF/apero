@@ -1,6 +1,6 @@
 # Apero
 
-[![version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
+[![version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](../LICENSE.md)
 
 **Librería de utilidades puras para Elixir** — sin ejecución de shell. Proporciona
@@ -16,7 +16,7 @@ caché, y utilidades puras de SO/Procesos.
 ```elixir
 def deps do
   [
-    {:apero, "~> 3.0.0"}
+    {:apero, "~> 3.1.0"}
   ]
 end
 ```
