@@ -100,8 +100,6 @@ defmodule Apero.Crypto.Cipher do
     :crypto.crypto_final(state)
   end
 
-  @dialyzer {:nowarn_function, decrypt_ctr: 3}
-
   @doc "Decrypts data encrypted with AES-256-CTR streaming."
   @spec decrypt_ctr(binary(), binary(), binary()) :: {:ok, binary()} | {:error, term()}
   def decrypt_ctr(ciphertext, key, iv) when byte_size(key) == 32 and byte_size(iv) == 16 do
