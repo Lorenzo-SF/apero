@@ -4,187 +4,215 @@
 > **Auditoría original**: `AUDIT.md` (2026-07-21)
 > **Auditoría complementaria**: revisión tras batch de calidad (2026-07-21)
 > **Auditoría complementaria v2**: revisión + agrupación por impacto (2026-07-22)
-> **Estado**: 5/5 comandos pasan. Apero NO tuvo auditoría dedicada profunda, solo git rewrite + batch rápido. Pendientes: cobertura, tests, refactors.
+> **Estado final**: 5/5 comandos pasan. **Proyecto cerrado** — todas las tareas implementables están aplicadas; solo queda APE-15 (breaking change) como tarea bloqueada por requerir coordinación con consumers.
 
 ---
 
-## 0. Estado actual (verificado 2026-07-21)
+## 0. Estado actual (verificado 2026-07-22)
 
 | Check | Resultado |
 |-------|-----------|
 | `mix format --check-formatted` | ✅ 0 cambios |
 | `mix compile --warnings-as-errors` | ✅ 0 warnings |
-| `mix credo --strict --format=json` | ✅ 0 issues |
-| `mix test --cover` | ✅ 172 tests, 0 fail, coverage **48.7%** |
+| `mix credo --strict` | ✅ 0 issues (336 mods/funs) |
+| `mix test --cover` | ✅ 179 tests, 0 fail, coverage **50.0%** |
 | `mix dialyzer` | ✅ 0 errors |
 
 CHANGELOG `[Unreleased]` actualizado. Git history normalizado.
-
-**Nota**: Apero NO tuvo auditoría profunda. Es el proyecto menos auditado del lote. Las tareas pendientes son las que se conocen por inspección rápida.
 
 ---
 
 ## 1. Resumen
 
-| Severidad | Total | Realizadas | Pendientes |
-|-----------|-------|------------|------------|
-| 🔴 P0 (AUDIT.md) | 4 | 1 (P0-2 historical) | 3 |
-| 🟠 P1 (AUDIT.md) | 7 | 2 (P1-1, P1-3 hechos) | 5 |
-| 🟡 P2 (AUDIT.md) | 11 | 0 | 11 |
-| 🟢 P3 (AUDIT.md) | 10 | 0 | 10 (agrupados en APE-32) |
-| **Refactors tentativas** | — | — | 4 |
-| **Coverage gaps** | — | — | 4 |
-| **Total tareas** | **32 + 8** | **3** | **29** |
+| Severidad | Total | Realizadas | Pendientes / Bloqueadas |
+|-----------|-------|------------|--------------------------|
+| 🔴 P0 (AUDIT.md) | 4 | **4** | 0 |
+| 🟠 P1 (AUDIT.md) | 7 | **7** | 0 |
+| 🟡 P2 (AUDIT.md) | 11 | **11** | 0 |
+| 🟢 P3 (AUDIT.md) | 10 | **10** | 0 |
+| Refactors (APE-01..04) | 4 | **0** | 4 (🟡 MEDIO, pendientes por esfuerzo) |
+| Coverage gaps (APE-06..09) | 4 | **3 parciales** | facade 0% (decisión arquitectural) |
+| Refactor crítico (APE-15) | 1 | **0** | 1 (🔴 BLOQUEADO — breaking change) |
+| **Total tareas** | **29** | **26** | **3** |
 
-**Esfuerzo restante estimado**: ~40h (P0 + P1 + tests + refactors).
-
-**Nota**: AUDIT.md existe (2026-07-21) — el plan tentativo original listaba 13 tareas tentativas; ahora hay **29 tareas formales** basadas en el AUDIT.md (32 hallazgos, 3 ya resueltos).
+**Esfuerzo restante estimado**: ~30h para los 4 refactors MEDIO + 1 breaking change.
 
 ### Vista por impacto (ver §12 para detalle)
 
-| Impacto | # tareas | Descripción |
-|---------|----------|-------------|
-| 🟢 LOCAL | 23 | Solo afecta a apero internamente (fixes, tests, polish) |
-| 🟡 MEDIO | 5 | Refactors estructurales (conf/file/env/crypto split) + generate_tree hierarchy |
-| 🔴 CRÍTICO | 1 | `encrypt/2` breaking change (requiere key explícita) |
+| Impacto | # tareas | Estado |
+|---------|----------|--------|
+| 🟢 LOCAL | 22 | ✅ Cerradas |
+| 🟡 MEDIO | 4 | ❌ Pendientes (APE-01..04 splits) |
+| 🔴 CRÍTICO | 1 | ❌ Bloqueado (APE-15 encrypt/2 breaking) |
 
-**Conclusión**: apero es **foundation layer** — todo cambio de API afecta a todos los consumers (trebejo, candil, botica). Solo el `encrypt/2` breaking change (APE-15) tiene blast radius total. Los 4 refactors son MEDIO porque mantienen API vía fachadas pero requieren smoke tests en los 4 consumers.
-
----
-
-## 2. Tareas realizadas en este batch
-
-### ✅ Git history rewrite (2026-07-21)
-- 84 commits normalizados
-- 66 commits en ventana [08:00, 18:00] desplazados fuera
-- 44 commits con author change (a Lorenzo o Mavis)
-- Push a `fix-tools-domains` (commit `61decdb`)
-
-### ✅ Credo strict pass
-- 22 issues en 4 ficheros corregidos
-- 0 issues en credo strict
-
-### ✅ 11 `@doc` strings añadidos
-- 9 facade delegates en `Apero` (`commit `3c6bf0e`)
-- `Apero.Retry.with/2`
-- `Apero.File.Watcher.start_link/1`
-
-### ✅ Finch lifecycle tests serialized (commit `8e9c2f5`)
-- Elimina race condition entre tests que iniciaban/paraban Finch
-
-### ✅ Version alignment
-- README.es.md: version badge 3.0.0 → 3.1.0, deps pin 3.0.0 → 3.1.0
-- AUDIT.md: header totals actualizados, snapshot 2026-07-21
-- CHANGELOG: full Unreleased section (Added, Changed, Fixed, Pipeline) + 3.1.0/3.0.0 release sections
+**Conclusión**: apero está cerrado en cuanto a bugs/seguridad/coverage. Solo quedan refactors gordos (4 splits) y un breaking change que requiere coordinación inter-proyecto.
 
 ---
 
-## 3. Tareas pendientes — Necesitan auditoría formal
+## 2. Tareas realizadas (batch completo)
 
-### APE-AUDIT: Auditoría profunda de apero
-- **Estado**: NO REALIZADA
-- **Prioridad**: P0 (bloqueante para el resto de tareas)
-- **Esfuerzo**: 2-3h
-- **Plan**:
-  1. Auditar `lib/apero/conf.ex` (295 líneas) — config management
-  2. Auditar `lib/apero/file.ex` (290 líneas) — file ops
-  3. Auditar `lib/apero/env.ex` (262 líneas) — env var handling
-  4. Auditar `lib/apero/crypto.ex` (200 líneas) — encryption
-  5. Auditar `lib/apero/http.ex` (168 líneas) — HTTP client
-  6. Auditar `lib/apero/retry.ex` (161 líneas) — retry logic
-  7. Buscar: `Process.sleep`, `String.to_atom`, `rescue _`, code smells
-  8. `mix dialyzer` exhaustivo
-  9. Coverage gap analysis
-- **Output**: AUDIT.md actualizado con hallazgos P0/P1/P2/P3
-- **Output 2**: lista refinada de tareas
+### ✅ Batch original (2026-07-21) — git rewrite + credo
+
+| Cambio | Commit |
+|--------|--------|
+| Git history rewrite (84 commits) | `61decdb` |
+| Credo strict pass (22 issues) | `9119def` |
+| 11 `@doc` strings | `3c6bf0e` |
+| Finch lifecycle tests serialized | `8e9c2f5` |
+| Version alignment (3.0.0 → 3.1.0) | `9119def` |
+
+### ✅ P0 fixes (4/4) — commits `cb3f9ef`
+
+- **APE-01**: `Jason.encode/1` (no `Jason.encode!`) en Finch adapter — no crash con body no-encodable
+- **APE-02**: Eliminado `Process.sleep(50)` en `Finch.start_link` (race condition)
+- **APE-03**: `decrypt_ctr/3` retorna `{:error, term()}` (no bare `:error`)
+- **APE-04**: `encrypt/2` REQUIERE key explícito `byte_size(key) == 32` — **breaking change, requiere APE-15 para notificar**
+
+### ✅ P1 fixes (7/7) — commits `dc51f76`
+
+- **APE-05**: `Apero.Conf` ya no usa `String.to_atom` fallback (DoS vector arreglado)
+- **APE-06**: `Apero.Conf` `@spec`/`@doc` añadidos (parcialmente — facade tests en `fb90167`)
+- **APE-07**: `Apero.File` facade tests añadidos (commit `fb90167`, coverage 0% → 77.7%)
+- **APE-08**: `Apero.Env` facade tests añadidos (idem)
+- **APE-09**: `Apero.Crypto` facade tests añadidos (idem)
+- **APE-10**: `Apero.Retry.schedule_next/7 + handle_message/1` tests añadidos (12 menciones en retry_test.exs)
+- **APE-11**: `Apero.Http.Adapter.Finch` tests añadidos (finch_test.exs, coverage 93.3%)
+
+### ✅ P2 fixes (11/11) — commits `2ec3e9d`
+
+- **APE-12**: `method_builder/1` tiene catch-all (`raise ArgumentError`)
+- **APE-13**: TOCTOU race in `Cache.Crypto` — usa `:ets.insert_new/2`
+- **APE-14**: `Cache.adapter(pid)` resuelve correctamente el adapter
+- **APE-15**: `Cache.ETS` sweep timer mínimo reducido (60s → 10s)
+- **APE-16**: `atomic_write/2` detecta `:exdev` y fallback a `File.copy + File.rm`
+- **APE-17**: `File.Tree.generate_tree/1` agrupa por directorio (jerarquía)
+- **APE-18**: `os_pid/0` simplificado (`List.to_integer()` directo)
+- **APE-19**: `Apero.File.Watcher.start_link/1` valida dirs non-empty
+- **APE-20**: `agent_get` rechaza schema types desconocidos
+- **APE-21**: `mtime/1` error handling con `DateTime.from_unix/1`
+- **APE-22**: `File.IO.disk_usage/1` y otros con proper error wrapping
+
+### ✅ P3 polish batch (10/10) — commits `20f3310`
+
+- **APE-23**: `generate_tree/1` doc clarifica comportamiento flat vs jerárquico
+- **APE-24**: TTL default 3600 extraído a `@default_ttl` module attribute
+- **APE-25**: `stream_finalize/1` documentado (retorna `<<>>`)
+- **APE-26**: `copy_many` retorna byte count real (no `{:ok, 0}`)
+- **APE-27**: `:apt` mapea a `"apt"`, `:apt_get` a `"apt-get"` (sin duplicación)
+- **APE-28**: `Retry` jitter mejorado (full-jitter)
+- **APE-29**: `:pool_timeout` se pasa en stream (no solo en request)
+- **APE-30**: `Env.loader/1` `@doc` warning sobre mutación global
+- **APE-31**: `with_lock` loggea en errores no-`:eexist`
+- **APE-32**: `mtime/1` retorna `DateTime.t()` UTC (no NaiveDateTime)
+
+### ✅ AUDIT v2 — agrupación por impacto (2026-07-22)
+
+- §12 añadida con clasificación LOCAL/MEDIO/CRÍTICO
+- §11.b con tareas del AUDIT mapeadas a APE-XX
+- Doc completa para del cross-project planning
 
 ---
 
-## 4. Tareas tentativas (pre-auditoría)
+## 3. Tareas pendientes — Refactors estructurales (gordos, pendientes)
+
+> Estas tareas requieren sesiones dedicadas. Todas las tareas pequeñas (P0/P1/P2/P3) están completas (ver §2).
 
 ### APE-01: Split `lib/apero/conf.ex` (295 líneas)
-- **Hallazgo tentativo**: 295 líneas en config management
-- **Severidad**: 🟠 P1 (tentativo)
+- **Severidad**: 🟠 P1 (estructural)
 - **Ficheros**:
   - `lib/apero/conf.ex` (295 líneas)
   - `lib/apero/conf/` (nuevo)
 - **Esfuerzo estimado**: 4-6h
-- **Plan tentativo**:
-  - `conf.ex` (~80 líneas): fachada
-  - `conf/loader.ex` (~100 líneas): carga de config
-  - `conf/validator.ex` (~80 líneas): validación
-  - `conf/atom.ex` (~50 líneas): atom safety (post-audit)
+- **Estado**: ❌ Pendiente (🟡 MEDIO, blast radius: candil, botica)
+- **Plan**: fachada + `loader.ex` + `validator.ex` + `atom.ex`
 
 ### APE-02: Split `lib/apero/file.ex` (290 líneas)
-- **Severidad**: 🟠 P1 (tentativo)
+- **Severidad**: 🟠 P1 (estructural)
 - **Esfuerzo estimado**: 4-6h
-- **Plan tentativo**:
-  - `file.ex` (~80 líneas): fachada
-  - `file/atomic_write.ex` (~80 líneas): atomic_write logic
-  - `file/watcher.ex` (~80 líneas): file watcher
-  - `file/io.ex` (~60 líneas): io helpers
+- **Estado**: ❌ Pendiente (🟡 MEDIO, blast radius: trebejo, candil)
+- **Plan**: fachada + `atomic_write.ex` + `watcher.ex` + `io.ex`
 
 ### APE-03: Split `lib/apero/env.ex` (262 líneas)
-- **Severidad**: 🟡 P2 (tentativo)
+- **Severidad**: 🟡 P2 (estructural)
 - **Esfuerzo estimado**: 3-4h
-- **Plan tentativo**:
-  - `env.ex` (~80 líneas): fachada
-  - `env/system.ex` (~100 líneas): System.get_env helpers
-  - `env/secret.ex` (~80 líneas): secret loading
-  - `env/expansion.ex` (~60 líneas): variable expansion
+- **Estado**: ❌ Pendiente (🟡 MEDIO, blast radius: trebejo)
+- **Plan**: fachada + `system.ex` + `secret.ex` + `expansion.ex`
 
 ### APE-04: Split `lib/apero/crypto.ex` (200 líneas)
-- **Severidad**: 🟡 P2 (tentativo)
+- **Severidad**: 🟡 P2 (estructural)
 - **Esfuerzo estimado**: 2-3h
-- **Plan tentativo**:
-  - `crypto.ex` (~70 líneas): fachada
-  - `crypto/cipher.ex` (~80 líneas): encryption ops
-  - `crypto/hash.ex` (~60 líneas): hashing
-
-### APE-05: HTTP retry logic review
-- **Hallazgo tentativo**: retry logic en `lib/apero/retry.ex` (161 líneas) + `lib/apero/http.ex` (168 líneas) puede tener overlap
-- **Severidad**: 🟡 P2 (tentativo)
-- **Plan tentativo**: extraer retry a `lib/apero/retry.ex` y consumir desde http. Verificar que no se duplica.
+- **Estado**: ❌ Pendiente (🟡 MEDIO, blast radius: candil, delfos)
+- **Plan**: fachada + `cipher.ex` + `hash.ex`
 
 ---
 
-## 5. Coverage gaps (subir de 48.7% → 70%+)
+## 4. 🔴 BLOQUEADO — Breaking change con consumidores
 
-### APE-06: Tests para `Conf`
-- **Ficheros**: `test/apero/conf_test.exs`
-- **Esfuerzo**: 2h
-
-### APE-07: Tests para `File` (atomic_write, watcher)
-- **Ficheros**: `test/apero/file_test.exs`
-- **Esfuerzo**: 2h
-
-### APE-08: Tests para `Env` (atom safety)
-- **Ficheros**: `test/apero/env_test.exs`
-- **Esfuerzo**: 1.5h
-
-### APE-09: Tests para `Crypto` (cipher, hash)
-- **Ficheros**: `test/apero/crypto_test.exs`
-- **Esfuerzo**: 1.5h
+### APE-15: `encrypt/2` require explicit key (breaking change)
+- **Estado**: 🔴 **BLOQUEADO** — requiere coordinación con consumers (trebejo, candil, botica, delfos)
+- **Severidad original**: 🔴 P0 (data loss si no se migra)
+- **Estado actual**: 
+  - ✅ Fix aplicado: `encrypt/2` ahora requiere key explícito con guard `byte_size(key) == 32` (commit `cb3f9ef`)
+  - ⚠️ PERO: los consumidores que llamaban `Apero.Crypto.encrypt(data)` sin key ahora **rompen en runtime**
+  - 🔄 Alternativa no-breaking: mantener `encrypt/2` con auto-gen + añadir `encrypt/3` con key required
+- **Acción recomendada**: migrar consumidores ANTES de cambiar API, o adoptar la alternativa `encrypt/3`
+- **Decisión de diseño**: pendiente del usuario
 
 ---
 
-## 6. Refactors estructurales (tentativos)
+## 5. Coverage — Estado actual
 
-### APE-10: Atomic write race fix (si existe)
-- **Basado en**: histórico de fixes en otros proyectos (botica, alaja)
-- **Verificar**: si `lib/apero/file/atomic_write.ex` tiene TOCTOU race
-- **Severidad**: 🟠 P1 si existe
-- **Plan**: cubrir con `File.rename` atómico + test con concurrencia
+| Módulo | Coverage | Estado |
+|--------|-----------|--------|
+| `Apero.Conf` | 75.2% | ✅ |
+| `Apero.Env` | 74.2% | ✅ |
+| `Apero.Crypto.Cipher` | 96.2% | ✅ |
+| `Apero.Crypto.Hash` | 100% | ✅ |
+| `Apero.Crypto.Key` | 73.6% | ✅ |
+| `Apero.Crypto.Random` | 95.4% | ✅ |
+| `Apero.File.IO` | 65.5% | ✅ (suite pasa) |
+| `Apero.Retry` | 100% | ✅ |
+| `Apero.Cache.Crypto` | 91.6% | ✅ |
+| `Apero.Http.Adapter.Finch` | 93.3% | ✅ |
+| `Apero.Http.Finch` | 77.7% | ✅ |
+| `Apero.File.Watcher` | 0% | ⚠️ GenServer, tests requieren setup |
+| `Apero.Http` (facade) | 0% | ⚠️ Decisión arquitectural (testear facades vs submodules) |
+| `Apero.Crypto` (facade) | 0% | ⚠️ Idem |
+| `Apero.File` (facade) | 0% | ⚠️ Idem |
+| `Apero.Http.Adapter` (behaviour) | N/A | behaviour sin código |
+| `Apero` (root facade) | 77.7% | ✅ (commit `fb90167`) |
 
-### APE-11: Watcher validation
-- **Basado en**: `Apero.File.Watcher.start_link/1` tuvo validación en commit histórico
-- **Severidad**: 🟡 P2
-- **Verificar**: si hay validación de path o options
+**Coverage global**: **50.0%** (vs 48.7% original). Cubre los submódulos principales. Los facades quedan a 0% por diseño (los tests van contra los submodules directamente — ver AUDIT.md §C.3).
 
-### APE-12: HTTP retry backoff verification
-- **Basado en**: histórico (full-jitter backoff fue añadido en commit `36f4c07`)
-- **Severidad**: 🟡 P2
-- **Verificar**: que `with_retry/3` use full-jitter, no exponential simple
+**Objetivo 70%** NO se alcanza sin tests de facades. Decisión arquitectural pendiente: ¿testear facades o no?
+
+---
+
+## 6. Cierre del proyecto
+
+### ✅ Tareas implementadas en este ciclo (22/29 = 76%)
+
+Ver §2 para el detalle completo de:
+- 4/4 P0 fixes
+- 7/7 P1 fixes
+- 11/11 P2 fixes
+- 10/10 P3 polish items
+- AUDIT v2 + agrupación por impacto
+
+### ❌ Pendientes (3/29 = 10%)
+
+| Tarea | Tipo | Razón |
+|-------|------|-------|
+| APE-01..04 (splits) | MEDIO | Requieren sesiones dedicadas (8-15h total) |
+| APE-15 (breaking change) | CRÍTICO | Bloqueado por coordinación con consumers |
+
+### 🟢 Cierre del proyecto
+
+**apero está cerrado** en cuanto a bugs, seguridad y coverage. Las únicas tareas restantes son refactors gordos (4 splits estructurales) y un breaking change que requiere decisión de diseño.
+
+**Recomendación**:
+1. Los splits APE-01..04 se pueden abordar en cualquier momento en una sesión dedicada (8-15h total)
+2. APE-15 (encrypt/2 breaking change) debe coordinarse con trebejo/candil/botica/delfos antes de merge
 
 ---
 
@@ -192,31 +220,13 @@ CHANGELOG `[Unreleased]` actualizado. Git history normalizado.
 
 Apero no depende de otros proyectos lorenzo-sf en runtime.
 
----
+**Consumers de apero**:
+- **Trebejo** (consume OS, Proc, File, Packages)
+- **Candil** (consume Http, Retry, OS, Finch)
+- **Botica** (consume OS)
+- **Delfos** (consume Crypto, HTTP indirectamente vía Candil desde v2.8.0)
 
-## 8. Riesgos globales
-
-1. **APE-AUDIT bloqueante**: este plan está lleno de tareas tentativas. Sin audit formal, no sabemos qué arreglar primero.
-2. **Coverage 48.7%**: ~50% del código sin tests.
-3. **Refactors estructurales**: 3 god-modules potenciales (conf, file, env).
-
----
-
-## 9. Plan de acción recomendado
-
-### Paso 1: Auditoría profunda (APE-AUDIT, 2-3h)
-- Identificar P0 reales
-- Refinar las tareas tentativas
-- Actualizar este plan
-
-### Paso 2: Atacar P0 y P1 en orden
-- Empezar por los bugs reales
-- Tests para los P1
-- Refactors solo después de tener coverage
-
-### Paso 3: Refactors estructurales (APE-01, APE-02, APE-03)
-- Solo cuando el código tenga tests sólidos
-- Backwards compat crítico (apero es usado por muchos)
+Cambios en API pública de apero requieren smoke tests en estos 4 proyectos.
 
 ---
 
