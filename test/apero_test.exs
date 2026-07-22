@@ -9,19 +9,21 @@ defmodule AperoTest do
   """
   use ExUnit.Case, async: true
 
+  alias Apero.Crypto.Hash
+
   describe "crypto delegates" do
     test "sha256/1 delegates to Apero.Crypto.Hash" do
-      assert Apero.sha256("hello") == Apero.Crypto.Hash.sha256("hello")
+      assert Apero.sha256("hello") == Hash.sha256("hello")
       assert byte_size(Apero.sha256("hello")) == 64
     end
 
     test "sha512/1 delegates to Apero.Crypto.Hash" do
-      assert Apero.sha512("hello") == Apero.Crypto.Hash.sha512("hello")
+      assert Apero.sha512("hello") == Hash.sha512("hello")
       assert byte_size(Apero.sha512("hello")) == 128
     end
 
     test "md5/1 delegates to Apero.Crypto.Hash" do
-      assert Apero.md5("hello") == Apero.Crypto.Hash.md5("hello")
+      assert Apero.md5("hello") == Hash.md5("hello")
       assert byte_size(Apero.md5("hello")) == 32
     end
   end
@@ -47,13 +49,16 @@ defmodule AperoTest do
   describe "retry delegate" do
     test "retry/2 retries until success" do
       result =
-        Apero.retry(fn ->
-          if :rand.uniform(10) > 0 do
-            {:ok, :done}
-          else
-            {:error, :retry}
-          end
-        end, max_attempts: 3)
+        Apero.retry(
+          fn ->
+            if :rand.uniform(10) > 0 do
+              {:ok, :done}
+            else
+              {:error, :retry}
+            end
+          end,
+          max_attempts: 3
+        )
 
       assert result == {:ok, :done}
     end
