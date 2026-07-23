@@ -12,6 +12,8 @@ defmodule Apero.Env do
 
   """
 
+  alias Apero.Env.{Loader, Serializer, Store}
+
   @doc """
   Loads a `.env` file and puts each key-value pair into the process environment.
 
@@ -26,7 +28,7 @@ defmodule Apero.Env do
   """
   @spec load(binary()) :: {:ok, map()} | {:error, binary()}
   def load(path \\ ".env") do
-    Apero.Env.Loader.load(path)
+    Loader.load(path)
   end
 
   @doc """
@@ -35,7 +37,7 @@ defmodule Apero.Env do
   """
   @spec read(binary()) :: {:ok, map()} | {:error, binary()}
   def read(path \\ ".env") do
-    Apero.Env.Loader.read(path)
+    Loader.read(path)
   end
 
   @doc """
@@ -45,7 +47,7 @@ defmodule Apero.Env do
   """
   @spec write(binary(), map()) :: :ok | {:error, binary()}
   def write(path \\ ".env", vars) when is_map(vars) do
-    Apero.Env.Serializer.write(path, vars)
+    Serializer.write(path, vars)
   end
 
   @doc """
@@ -53,7 +55,7 @@ defmodule Apero.Env do
   """
   @spec get(binary(), any()) :: binary() | any()
   def get(key, default \\ nil) do
-    Apero.Env.Store.get(key, default)
+    Store.get(key, default)
   end
 
   @doc """
@@ -77,7 +79,7 @@ defmodule Apero.Env do
   @spec get_as(binary(), :string | :integer | :float | :boolean | :atom) ::
           {:ok, any()} | {:error, binary()}
   def get_as(key, type) do
-    Apero.Env.Store.get_as(key, type)
+    Store.get_as(key, type)
   end
 
   @doc """
@@ -95,7 +97,7 @@ defmodule Apero.Env do
   """
   @spec require_keys([binary()]) :: {:ok, map()} | {:error, [binary()]}
   def require_keys(keys) when is_list(keys) do
-    Apero.Env.Store.require_keys(keys)
+    Store.require_keys(keys)
   end
 
   @doc """
@@ -103,7 +105,7 @@ defmodule Apero.Env do
   """
   @spec put(binary(), binary()) :: :ok
   def put(key, value) when is_binary(key) and is_binary(value) do
-    Apero.Env.Store.put(key, value)
+    Store.put(key, value)
   end
 
   @doc """
@@ -111,7 +113,7 @@ defmodule Apero.Env do
   """
   @spec delete(binary()) :: :ok
   def delete(key) when is_binary(key) do
-    Apero.Env.Store.delete(key)
+    Store.delete(key)
   end
 
   @doc """
@@ -119,6 +121,6 @@ defmodule Apero.Env do
   """
   @spec all() :: map()
   def all do
-    Apero.Env.Store.all()
+    Store.all()
   end
 end
