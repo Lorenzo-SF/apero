@@ -9,7 +9,9 @@ defmodule Apero.Cache.ETS do
 
   use GenServer
 
-  defstruct [:name, :table, :timer, ttl: 3600]
+  @default_ttl 3600
+
+  defstruct [:name, :table, :timer, ttl: @default_ttl]
 
   @impl true
   def start_link(opts) do
@@ -19,16 +21,16 @@ defmodule Apero.Cache.ETS do
 
   @impl true
   def init(opts) do
-    ttl = Keyword.get(opts, :ttl, 3600)
+    ttl = Keyword.get(opts, :ttl, @default_ttl)
     name = Keyword.get(opts, :name, make_ref())
     table = :ets.new(name, [:set, :public, :named_table])
-    timer = Process.send_after(self(), :sweep, max(ttl * 1000, 60_000))
+    timer = Process.send_after(self(), :sweep, max(ttl * 1000, 10_000))
     {:ok, %__MODULE__{name: name, table: table, timer: timer, ttl: ttl}}
   end
 
   @impl true
   def put(cache, key, value, opts) do
-    ttl = Keyword.get(opts, :ttl, 3600)
+    ttl = Keyword.get(opts, :ttl, @default_ttl)
     expires_at = System.system_time(:second) + ttl
     :ets.insert(table(cache), {key, value, expires_at})
     :ok
@@ -82,7 +84,7 @@ defmodule Apero.Cache.ETS do
   def handle_info(:sweep, state) do
     now = System.system_time(:second)
     :ets.select_delete(state.table, [{{:_, :_, :"$1"}, [{:<, :"$1", now}], [true]}])
-    timer = Process.send_after(self(), :sweep, max(state.ttl * 1000, 60_000))
+    timer = Process.send_after(self(), :sweep, max(state.ttl * 1000, 10_000))
     {:noreply, %{state | timer: timer}}
   end
 

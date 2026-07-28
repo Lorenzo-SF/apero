@@ -4,7 +4,6 @@ defmodule Apero.Crypto do
   alias Apero.Crypto.{Cipher, Hash, Key, Random}
 
   alias Apero.Cache.Crypto, as: CacheCrypto
-  alias Apero.Cache.Crypto, as: CacheCrypto
 
   @moduledoc """
   Cryptographic utilities — hashing, symmetric/asymmetric encryption, KDF.
@@ -58,14 +57,15 @@ defmodule Apero.Crypto do
 
   @deprecated "Use Apero.Crypto.Cipher.encrypt/2 instead"
   @doc "Encrypts plaintext with AES-256-GCM. Returns `{:ok, ciphertext}`."
-  @spec encrypt(binary(), binary() | nil) :: {:ok, binary()}
-  def encrypt(plaintext, key \\ nil) when is_binary(plaintext),
-    do: Cipher.encrypt(plaintext, key)
+  @spec encrypt(binary(), binary()) :: {:ok, binary()} | {:error, term()}
+  def encrypt(plaintext, key) when is_binary(plaintext) and byte_size(key) == 32 do
+    Cipher.encrypt(plaintext, key)
+  end
 
   @deprecated "Use Apero.Crypto.Cipher.decrypt/2 instead"
   @doc "Decrypts a value encrypted with `encrypt/2`. Returns `{:ok, plaintext}` or `{:error, reason}`."
   @spec decrypt(binary(), binary()) :: {:ok, binary()} | {:error, term()}
-  def decrypt(encoded, key) when is_binary(encoded) and is_binary(key),
+  def decrypt(encoded, key) when is_binary(encoded) and byte_size(key) == 32,
     do: Cipher.decrypt(encoded, key)
 
   # ═══════════════════════════════════════════════════════════════════════
@@ -80,7 +80,7 @@ defmodule Apero.Crypto do
 
   @deprecated "Use Apero.Crypto.Cipher.decrypt_chacha20/2 instead"
   @doc "Decrypts ChaCha20-Poly1305 encrypted data."
-  @spec decrypt_chacha20(binary(), binary()) :: {:ok, binary()} | :error
+  @spec decrypt_chacha20(binary(), binary()) :: {:ok, binary()} | {:error, term()}
   def decrypt_chacha20(encoded, key) when is_binary(encoded) and byte_size(key) == 32,
     do: Cipher.decrypt_chacha20(encoded, key)
 
@@ -114,7 +114,7 @@ defmodule Apero.Crypto do
 
   @deprecated "Use Apero.Crypto.Cipher.decrypt_ctr/3 instead"
   @doc "Decrypts data encrypted with AES-256-CTR streaming."
-  @spec decrypt_ctr(binary(), binary(), binary()) :: {:ok, binary()} | :error
+  @spec decrypt_ctr(binary(), binary(), binary()) :: {:ok, binary()} | {:error, term()}
   def decrypt_ctr(ciphertext, key, iv) when byte_size(key) == 32 and byte_size(iv) == 16,
     do: Cipher.decrypt_ctr(ciphertext, key, iv)
 
@@ -130,7 +130,7 @@ defmodule Apero.Crypto do
 
   @deprecated "Use Apero.Crypto.Key.compute_ecdh_secret/2 instead"
   @doc "Computes a shared secret from your private key and peer's public key."
-  @spec compute_ecdh_secret(binary(), binary()) :: {:ok, binary()} | :error
+  @spec compute_ecdh_secret(binary(), binary()) :: {:ok, binary()} | {:error, term()}
   def compute_ecdh_secret(my_private, peer_public),
     do: Key.compute_ecdh_secret(my_private, peer_public)
 
@@ -198,16 +198,4 @@ defmodule Apero.Crypto do
     do: Random.secure_compare(a, b)
 
   def secure_compare(_, _), do: false
-
-  def start_link do
-    case :ets.whereis(:apero_cache_crypto) do
-      :undefined ->
-        :ets.new(:apero_cache_crypto, [:named_table, :public, :set, read_concurrency: true])
-
-      _ ->
-        :ok
-    end
-
-    :ok
-  end
 end

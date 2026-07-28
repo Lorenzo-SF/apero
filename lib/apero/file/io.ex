@@ -1,4 +1,6 @@
 defmodule Apero.File.IO do
+  require Logger
+
   @moduledoc """
   I/O operations: atomic writes, checksums, temporary resources, file locking.
 
@@ -17,12 +19,32 @@ defmodule Apero.File.IO do
 
     with :ok <- File.mkdir_p(dir),
          :ok <- File.write(tmp, content),
-         :ok <- File.rename(tmp, path) do
+         :ok <- commit_atomic_write(tmp, path) do
       :ok
     else
       {:error, reason} ->
         File.rm(tmp)
         {:error, "atomic_write failed for #{path}: #{reason}"}
+    end
+  end
+
+  defp commit_atomic_write(tmp, path) do
+    case File.rename(tmp, path) do
+      :ok ->
+        :ok
+
+      {:error, :exdev} ->
+        case File.copy(tmp, path) do
+          {:ok, _bytes} ->
+            File.rm(tmp)
+            :ok
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -54,16 +76,20 @@ defmodule Apero.File.IO do
           %{binary() => {:ok, binary()} | {:error, binary()}}
   def checksum_many(paths, algo \\ :sha256) when is_list(paths) do
     paths
-    |> Enum.with_index()
     |> Task.async_stream(
-      fn {p, idx} -> {idx, checksum(p, algo)} end,
+      fn p -> {p, checksum(p, algo)} end,
       max_concurrency: min(length(paths), 4),
-      ordered: false
+      ordered: true
     )
     |> Enum.reduce(%{}, fn
-      {:ok, {idx, {:ok, result}}}, acc -> Map.put(acc, Enum.at(paths, idx), {:ok, result})
-      {:ok, {idx, {:error, reason}}}, acc -> Map.put(acc, Enum.at(paths, idx), {:error, reason})
-      {:exit, reason}, acc -> Map.put(acc, :error, reason)
+      {:ok, {path, {:ok, result}}}, acc ->
+        Map.put(acc, path, {:ok, result})
+
+      {:ok, {path, {:error, reason}}}, acc ->
+        Map.put(acc, path, {:error, reason})
+
+      {:exit, _reason}, acc ->
+        acc
     end)
   end
 
@@ -114,7 +140,7 @@ defmodule Apero.File.IO do
     |> Task.async_stream(
       fn {pair, _idx} -> copy_pair(pair) end,
       max_concurrency: min(length(pairs), 8),
-      ordered: false
+      ordered: true
     )
     |> Enum.map(fn
       {:ok, result} -> result
@@ -128,8 +154,8 @@ defmodule Apero.File.IO do
     dest_dir = Path.dirname(dest)
 
     with :ok <- File.mkdir_p(dest_dir),
-         {:ok, _bytes} <- File.copy(source, dest) do
-      {:ok, 0}
+         {:ok, bytes} <- File.copy(source, dest) do
+      {:ok, bytes}
     else
       {:error, reason} -> {:error, "Cannot copy #{source} to #{dest}: #{reason}"}
     end
@@ -155,6 +181,7 @@ defmodule Apero.File.IO do
           acquire_lock(lock_path, deadline, retry_ms, fun)
 
         {:error, reason} ->
+          Logger.warning("with_lock failed for #{lock_path}: #{inspect(reason)}")
           {:error, "Cannot acquire lock #{lock_path}: #{reason}"}
       end
     end

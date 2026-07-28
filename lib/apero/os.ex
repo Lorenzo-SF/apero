@@ -58,7 +58,8 @@ defmodule Apero.OS do
   def wsl? do
     type() == :linux and
       (File.exists?("/proc/sys/fs/binfmt_misc/WSLInterop") or
-         String.contains?(System.get_env("PATH", ""), "WSL"))
+         (File.exists?("/proc/version") and
+            String.contains?(File.read!("/proc/version"), "microsoft")))
   end
 
   @doc "Returns true if running inside a container (Docker, Podman, LXC)."
