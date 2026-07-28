@@ -1,6 +1,6 @@
 # Apero
 
-[![version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
+[![version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://github.com/Lorenzo-SF/Apero)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](../LICENSE.md)
 
 **Librería de utilidades puras para Elixir** — sin ejecución de shell. Proporciona
@@ -16,7 +16,7 @@ caché, y utilidades puras de SO/Procesos.
 ```elixir
 def deps do
   [
-    {:apero, "~> 3.0.0"}
+    {:apero, "~> 3.1.0"}
   ]
 end
 ```
@@ -40,7 +40,8 @@ Apero.File.generate_tree(["lib/", "test/"])               # => árbol ASCII
 Apero.Crypto.sha256("datos")                              # => hex digest
 Apero.Crypto.random_hex(16)                               # => token aleatorio
 *Los resultados de `sha256/1`, `sha512/1` y `md5/1` se almacenan ahora en ETS para llamadas repetidas más rápidas.*
-{:ok, ct} = Apero.Crypto.encrypt("secreto")               # AES-256-GCM
+clave = Apero.Crypto.generate_key()                       # clave AES de 32 bytes
+{:ok, ct} = Apero.Crypto.encrypt("secreto", clave)        # AES-256-GCM
 {:ok, pt} = Apero.Crypto.decrypt(ct, clave)
 ```
 

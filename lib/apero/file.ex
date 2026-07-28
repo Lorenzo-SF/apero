@@ -141,9 +141,9 @@ defmodule Apero.File do
   defdelegate size(path), to: Apero.File.Path
 
   @doc """
-  Returns the last modification time of a file as a `NaiveDateTime`.
+  Returns the last modification time of a file as a `DateTime` (UTC).
   """
-  @spec mtime(binary()) :: {:ok, NaiveDateTime.t()} | {:error, File.posix()}
+  @spec mtime(binary()) :: {:ok, DateTime.t()} | {:error, term()}
   defdelegate mtime(path), to: Apero.File.Path
 
   @doc """

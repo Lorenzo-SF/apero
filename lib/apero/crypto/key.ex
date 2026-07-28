@@ -55,12 +55,12 @@ defmodule Apero.Crypto.Key do
   end
 
   @doc "Computes a shared secret from your private key and peer's public key."
-  @spec compute_ecdh_secret(binary(), binary()) :: {:ok, binary()} | :error
+  @spec compute_ecdh_secret(binary(), binary()) :: {:ok, binary()} | {:error, term()}
   def compute_ecdh_secret(my_private, peer_public)
       when byte_size(my_private) == 32 and byte_size(peer_public) == 32 do
     {:ok, :crypto.compute_key(:ecdh, peer_public, my_private, :x25519)}
   rescue
-    _ -> :error
+    e -> {:error, e}
   end
 
   # ═══════════════════════════════════════════════════════════════════════
