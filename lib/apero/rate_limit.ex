@@ -17,6 +17,7 @@ defmodule Apero.RateLimit do
       Apero.RateLimit.wait(:llm_api, 1, 2000)   #=> :ok
   """
 
+  alias Apero.Clock
   alias Apero.RateLimit.Bucket
 
   @table :apero_rate_limit
@@ -139,7 +140,7 @@ defmodule Apero.RateLimit do
         {:error, :rate_limited}
 
       true ->
-        deadline = Apero.Clock.monotonic_ms() + timeout_ms
+        deadline = Clock.monotonic_ms() + timeout_ms
         poll(name, n, deadline)
     end
   end
@@ -160,7 +161,7 @@ defmodule Apero.RateLimit do
     if Bucket.allow?(name, n) do
       :ok
     else
-      now = Apero.Clock.monotonic_ms()
+      now = Clock.monotonic_ms()
 
       if now >= deadline do
         {:error, :timeout}

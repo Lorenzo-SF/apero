@@ -13,6 +13,7 @@ defmodule Apero.RateLimit.Bucket do
 
   use GenServer
 
+  alias Apero.Clock
   alias Apero.RateLimit
 
   @table Apero.RateLimit.table()
@@ -64,7 +65,7 @@ defmodule Apero.RateLimit.Bucket do
 
   @impl true
   def init(%RateLimit{} = config) do
-    now = Apero.Clock.monotonic_ms()
+    now = Clock.monotonic_ms()
 
     state = %{
       config: config,
@@ -99,7 +100,7 @@ defmodule Apero.RateLimit.Bucket do
   defp initial_level(%RateLimit{capacity: capacity}), do: capacity * 1.0
 
   defp consume(state, n) do
-    now = Apero.Clock.monotonic_ms()
+    now = Clock.monotonic_ms()
     elapsed_s = (now - state.updated_at) / 1000
 
     case state.config.bucket do

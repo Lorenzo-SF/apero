@@ -87,10 +87,10 @@ defmodule Apero.Jsonl do
       iex> Apero.Jsonl.stream!(path) |> Enum.to_list()
       [%{"a" => 1}]
   """
-  @spec stream!(binary()) :: Stream.t()
+  @spec stream!(binary()) :: Enumerable.t()
   def stream!(path) do
     path
-    |> File.stream!([], :line)
+    |> File.stream!(:line, [])
     |> Stream.map(&decode_line/1)
     |> Stream.reject(&is_nil/1)
   end
@@ -143,22 +143,23 @@ defmodule Apero.Jsonl do
   @spec recover(binary(), (binary() -> {:ok, map()} | {:error, term()})) :: [map()]
   def recover(path, fun) do
     case File.read(path) do
-      {:ok, content} ->
-        content
-        |> String.split("\n", trim: true)
-        |> Enum.flat_map(fn line ->
-          case fun.(line) do
-            {:ok, map} when is_map(map) -> [map]
-            _ -> []
-          end
-        end)
-
-      {:error, _reason} ->
-        []
+      {:ok, content} -> recover_lines(content, fun)
+      {:error, _reason} -> []
     end
   end
 
   # -- private ----------------------------------------------------------
+
+  defp recover_lines(content, fun) do
+    content
+    |> String.split("\n", trim: true)
+    |> Enum.flat_map(fn line ->
+      case fun.(line) do
+        {:ok, map} when is_map(map) -> [map]
+        _ -> []
+      end
+    end)
+  end
 
   defp parse_lines(content) do
     content

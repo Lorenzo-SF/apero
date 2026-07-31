@@ -51,6 +51,7 @@ defmodule Apero.MixProject do
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:dialyxir, ">= 1.0.0", only: [:dev, :test], runtime: false},
       {:bypass, "~> 2.1", only: :test},
+      {:stream_data, "~> 1.1", only: :test},
       {:jason, "~> 1.4"},
       {:file_system, "~> 1.0"},
       {:finch, "~> 0.23"},
@@ -132,7 +133,7 @@ defmodule Apero.MixProject do
         "test --cover"
       ],
       lint: [
-        "format",
+        "format --check-formatted",
         "compile --warnings-as-errors",
         "dialyzer",
         "credo --strict --format=json",
