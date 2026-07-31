@@ -130,14 +130,14 @@ defmodule Apero.MixProject do
         "format",
         "compile",
         "dialyzer",
-        "test --cover"
+        "cmd sh -c 'MIX_ENV=test mix test --cover'"
       ],
       lint: [
         "format --check-formatted",
         "compile --warnings-as-errors",
         "dialyzer",
-        "credo --strict --format=json",
-        "test --cover"
+        "cmd sh -c 'MIX_ENV=test mix credo --strict'",
+        "cmd sh -c 'MIX_ENV=test mix test --cover'"
       ]
     ]
   end
