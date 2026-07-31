@@ -77,7 +77,9 @@ defmodule Apero.MixProject do
           Apero.File.IO,
           Apero.File.Path,
           Apero.File.Tree,
-          Apero.File.Watcher
+          Apero.File.Watcher,
+          Apero.Atomic.File,
+          Apero.Jsonl
         ],
         Security: [
           Apero.Crypto,
@@ -89,6 +91,12 @@ defmodule Apero.MixProject do
         Environment: [Apero.Env, Apero.Conf],
         System: [Apero.OS, Apero.Proc],
         "Retry & Cache": [Apero.Retry, Apero.Cache],
+        "Rate Limit & Backoff": [
+          Apero.RateLimit,
+          Apero.RateLimit.Bucket,
+          Apero.Backoff,
+          Apero.Clock
+        ],
         HTTP: [
           Apero.Http,
           Apero.Http.Request,
