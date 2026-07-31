@@ -4,7 +4,7 @@ defmodule Apero.MixProject do
   def project do
     [
       app: :apero,
-      version: "3.1.0",
+      version: "4.0.0",
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -63,7 +63,7 @@ defmodule Apero.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "docs/README.es.md", "LICENSE.md"],
+      extras: ["README.md", "docs/README.es.md", "LICENSE.md", "guides/which_module_when.md"],
       groups_for_modules: [
         Core: [
           Apero,
