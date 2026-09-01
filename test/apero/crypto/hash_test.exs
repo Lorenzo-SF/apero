@@ -1,5 +1,6 @@
 defmodule Apero.Crypto.HashTest do
   use ExUnit.Case, async: true
+  use ExUnitProperties
 
   alias Apero.Crypto.Hash
 
@@ -48,6 +49,43 @@ defmodule Apero.Crypto.HashTest do
 
     test "different keys produce different results" do
       assert Hash.hmac("key1", "data") != Hash.hmac("key2", "data")
+    end
+  end
+
+  describe "property tests" do
+    property "sha256 is collision-free for distinct inputs" do
+      check all(
+              x <- binary(),
+              y <- binary(),
+              x != y
+            ) do
+        assert Hash.sha256(x) != Hash.sha256(y)
+      end
+    end
+
+    property "sha256 is deterministic" do
+      check all(x <- binary()) do
+        assert Hash.sha256(x) == Hash.sha256(x)
+      end
+    end
+
+    property "sha256 output is always a 64-char hex string" do
+      check all(x <- binary()) do
+        assert String.length(Hash.sha256(x)) == 64
+        assert Regex.match?(~r/^[0-9a-f]+$/, Hash.sha256(x))
+      end
+    end
+
+    property "hmac depends on both key and data" do
+      check all(
+              key1 <- binary(),
+              key2 <- binary(),
+              data1 <- binary(),
+              data2 <- binary(),
+              key1 != key2 or data1 != data2
+            ) do
+        assert Hash.hmac(key1, data1) != Hash.hmac(key2, data2)
+      end
     end
   end
 end

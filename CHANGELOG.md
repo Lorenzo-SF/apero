@@ -5,6 +5,49 @@ All notable changes to Apero are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] — 2026-07-31
+
+### Added
+- `Apero.RateLimit` — token bucket and leaky bucket rate limiting.
+  Named buckets backed by a GenServer (registered via
+  `Apero.RateLimit.Registry`) with state mirrored to a public ETS table
+  (`:apero_rate_limit`, `read_concurrency: true`). API: `new/1`,
+  `allow?/2`, `check/2` (typed `{:error, :rate_limited}`), `wait/3`
+  (polls every 10ms, never blocks the BEAM).
+- `Apero.Backoff` — exponential backoff with full and decorrelated
+  jitter. `delay/2` is pure and testable with a seeded `:rand`;
+  `sleep/2` applies the delay. Replaces the 5 custom retry-delay
+  implementations spread across candil/delfos/trebejo.
+- `Apero.Clock` — injectable clock: `now/0`, `monotonic_ms/0`,
+  `with_fixed/2` (scoped override, restores even on raise),
+  `set_fixed!/1` (global override for tests, `nil` restores real clock).
+  `monotonic_ms/0` is immune to the override so rate limiters stay
+  correct under fixed time.
+- `Apero.Atomic.File` — atomic writes (temp file + rename in the same
+  directory), optional `fsync`, retry on `:eagain`, and `replace/3`
+  that leaves the original untouched when the transform errors.
+- `Apero.Jsonl` — append-only JSON Lines reader/writer: `write!/3`,
+  `append!/3`, `stream!/1`, `read_all/1`, `recover/2`. Corrupted and
+  truncated final lines are skipped (with `Logger.warning`) so a crashed
+  writer does not corrupt subsequent reads.
+
+### Changed
+- `Apero.Application` now starts `Apero.RateLimit.Registry` (unique
+  keys) and `Apero.RateLimit.Supervisor` (dynamic supervisor) for named
+  rate-limit buckets.
+- Reactivated crypto test files (`hash_test.exs`, `random_test.exs`,
+  previously `.skip`) and added property tests with `stream_data`
+  (hash collisions/determinism, `secure_compare` length mismatch).
+- CI: `mix format --check-formatted` added to the lint job; `mix lint`
+  alias now checks formatting instead of rewriting in place.
+
+### Pipeline
+- `mix format` — clean, no diff.
+- `mix compile --warnings-as-errors` — exit 0.
+- `mix credo --strict` — 0 issues.
+- `mix test` — 245 tests, 8 properties, 0 failures.
+- `mix dialyzer` — 0 errors.
+
 ## [Unreleased]
 
 ### Added

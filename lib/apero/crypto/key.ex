@@ -50,7 +50,10 @@ defmodule Apero.Crypto.Key do
   @spec generate_ecdh_keypair() :: {binary(), binary()}
   def generate_ecdh_keypair do
     private = :crypto.strong_rand_bytes(32)
-    public = :crypto.generate_key(:ecdh, :x25519, private) |> elem(1)
+
+    # OTP 27+ returns {PublicKey, PrivateKey} for :x25519 (the private key
+    # is returned clamped). The public key is the first element.
+    public = :crypto.generate_key(:ecdh, :x25519, private) |> elem(0)
     {private, public}
   end
 
