@@ -4,7 +4,7 @@ defmodule Apero.MixProject do
   def project do
     [
       app: :apero,
-      version: "3.1.0",
+      version: "4.0.0",
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -51,6 +51,7 @@ defmodule Apero.MixProject do
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:dialyxir, ">= 1.0.0", only: [:dev, :test], runtime: false},
       {:bypass, "~> 2.1", only: :test},
+      {:stream_data, "~> 1.1", only: :test},
       {:jason, "~> 1.4"},
       {:file_system, "~> 1.0"},
       {:finch, "~> 0.23"},
@@ -62,7 +63,7 @@ defmodule Apero.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "docs/README.es.md", "LICENSE.md"],
+      extras: ["README.md", "docs/README.es.md", "LICENSE.md", "guides/which_module_when.md"],
       groups_for_modules: [
         Core: [
           Apero,
@@ -77,7 +78,9 @@ defmodule Apero.MixProject do
           Apero.File.IO,
           Apero.File.Path,
           Apero.File.Tree,
-          Apero.File.Watcher
+          Apero.File.Watcher,
+          Apero.Atomic.File,
+          Apero.Jsonl
         ],
         Security: [
           Apero.Crypto,
@@ -89,6 +92,12 @@ defmodule Apero.MixProject do
         Environment: [Apero.Env, Apero.Conf],
         System: [Apero.OS, Apero.Proc],
         "Retry & Cache": [Apero.Retry, Apero.Cache],
+        "Rate Limit & Backoff": [
+          Apero.RateLimit,
+          Apero.RateLimit.Bucket,
+          Apero.Backoff,
+          Apero.Clock
+        ],
         HTTP: [
           Apero.Http,
           Apero.Http.Request,
@@ -121,14 +130,14 @@ defmodule Apero.MixProject do
         "format",
         "compile",
         "dialyzer",
-        "test --cover"
+        "cmd sh -c 'MIX_ENV=test mix test --cover'"
       ],
       lint: [
-        "format",
+        "format --check-formatted",
         "compile --warnings-as-errors",
         "dialyzer",
-        "credo --strict --format=json",
-        "test --cover"
+        "cmd sh -c 'MIX_ENV=test mix credo --strict'",
+        "cmd sh -c 'MIX_ENV=test mix test --cover'"
       ]
     ]
   end

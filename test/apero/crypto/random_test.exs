@@ -1,5 +1,6 @@
 defmodule Apero.Crypto.RandomTest do
   use ExUnit.Case, async: true
+  use ExUnitProperties
 
   alias Apero.Crypto.Random
 
@@ -88,6 +89,38 @@ defmodule Apero.Crypto.RandomTest do
       assert Random.secure_compare("hello", nil) == false
       assert Random.secure_compare(nil, "hello") == false
       assert Random.secure_compare(123, 123) == false
+    end
+  end
+
+  describe "property tests" do
+    property "random_hex returns a lowercase hex string of the right length" do
+      check all(bytes <- integer(1..64)) do
+        hex = Random.random_hex(bytes)
+        assert String.length(hex) == bytes * 2
+        assert Regex.match?(~r/^[0-9a-f]+$/, hex)
+      end
+    end
+
+    property "secure_compare with different lengths never crashes and returns false" do
+      check all(
+              a <- binary(),
+              b <- binary(),
+              byte_size(a) != byte_size(b)
+            ) do
+        assert Random.secure_compare(a, b) == false
+      end
+    end
+
+    property "secure_compare is consistent with equality for same-length binaries" do
+      check all(a <- binary()) do
+        assert Random.secure_compare(a, a) == true
+      end
+    end
+
+    property "random_password returns the requested length" do
+      check all(length <- integer(1..64)) do
+        assert String.length(Random.random_password(length)) == length
+      end
     end
   end
 end
