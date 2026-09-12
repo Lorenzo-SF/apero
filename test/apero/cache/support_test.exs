@@ -1,9 +1,11 @@
 defmodule Apero.Cache.SupportTest do
   use ExUnit.Case, async: true
 
+  alias Apero.Cache.Adapter
+
   describe "Apero.Cache.Adapter behaviour" do
     test "behaviour callbacks are defined" do
-      callbacks = Apero.Cache.Adapter.behaviour_info(:callbacks)
+      callbacks = Adapter.behaviour_info(:callbacks)
       names = Enum.map(callbacks, fn {name, _arity} -> name end)
       assert :start_link in names
       assert :put in names

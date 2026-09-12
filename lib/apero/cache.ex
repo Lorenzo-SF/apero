@@ -22,6 +22,8 @@ defmodule Apero.Cache do
       Apero.Cache.put(:redis_cache, "key", "value")
   """
 
+  alias Apero.Cache.AdapterMonitor
+
   @adapters_table :apero_cache_adapters
 
   @type cache_name :: atom() | pid()
@@ -40,8 +42,8 @@ defmodule Apero.Cache do
         :ets.insert(@adapters_table, {pid, adapter})
         # Hand the monitor to AdapterMonitor so the cleanup outlives
         # the caller's lifecycle (P1-4).
-        if Process.whereis(Apero.Cache.AdapterMonitor) do
-          Apero.Cache.AdapterMonitor.track(pid)
+        if Process.whereis(AdapterMonitor) do
+          AdapterMonitor.track(pid)
         else
           Process.monitor(pid)
         end
