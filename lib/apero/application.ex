@@ -17,11 +17,14 @@ defmodule Apero.Application do
 
   @impl true
   def start(_type, _args) do
-    Crypto.init_table()
+    # Initialise the @adapters_table ETS table at boot so concurrent
+    # callers never race on first-use creation.
+    Apero.Cache.init_adapters_table!()
 
     children = [
       {Registry, keys: :unique, name: Apero.RateLimit.Registry},
-      {DynamicSupervisor, name: Apero.RateLimit.Supervisor, strategy: :one_for_one}
+      {DynamicSupervisor, name: Apero.RateLimit.Supervisor, strategy: :one_for_one},
+      Apero.Cache.Supervisor
     ]
 
     opts = [strategy: :one_for_one, name: Apero.Supervisor]

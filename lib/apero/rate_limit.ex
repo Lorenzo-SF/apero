@@ -112,10 +112,11 @@ defmodule Apero.RateLimit do
   @doc """
   Waits until `n` units can be consumed or `timeout_ms` elapses.
 
-  Polls every 10ms, so it never blocks the BEAM scheduler. Returns `:ok`
-  on success, `{:error, :timeout}` if the deadline passes, or
-  `{:error, :rate_limited}` if the bucket refills at `0.0`/s (it can
-  never free capacity again).
+  Polls every 10ms via `receive` (not recursion), so the BEAM scheduler
+  is never blocked for the full timeout and the call stack doesn't
+  grow with the duration.  Returns `:ok` on success, `{:error, :timeout}`
+  if the deadline passes, or `{:error, :rate_limited}` if the bucket
+  refills at `0.0`/s (it can never free capacity again).
 
   ## Examples
 
@@ -141,7 +142,7 @@ defmodule Apero.RateLimit do
 
       true ->
         deadline = Clock.monotonic_ms() + timeout_ms
-        poll(name, n, deadline)
+        wait_loop(name, n, deadline)
     end
   end
 
@@ -157,18 +158,31 @@ defmodule Apero.RateLimit do
     end
   end
 
-  defp poll(name, n, deadline) do
-    if Bucket.allow?(name, n) do
-      :ok
-    else
-      now = Clock.monotonic_ms()
+  # P1-5 fix: tail-recursive wait with `Process.send_after` so the
+  # BEAM scheduler isn't blocked for the full timeout AND the call
+  # stack doesn't grow with the timeout duration.  Same semantics
+  # as the previous `poll/3` recursion.
+  defp wait_loop(name, n, deadline) do
+    receive do
+      :poll ->
+        do_poll(name, n, deadline)
+    after
+      10 ->
+        do_poll(name, n, deadline)
+    end
+  end
 
-      if now >= deadline do
+  defp do_poll(name, n, deadline) do
+    cond do
+      Bucket.allow?(name, n) ->
+        :ok
+
+      Clock.monotonic_ms() >= deadline ->
         {:error, :timeout}
-      else
-        Process.sleep(10)
-        poll(name, n, deadline)
-      end
+
+      true ->
+        Process.send_after(self(), :poll, 10)
+        wait_loop(name, n, deadline)
     end
   end
 end

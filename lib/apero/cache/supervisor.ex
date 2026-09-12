@@ -2,9 +2,15 @@ defmodule Apero.Cache.Supervisor do
   @moduledoc """
   Supervisor for cache adapters.
 
-  Currently a no-op (the in-memory ETS cache does not need supervision)
-  but exists to provide an extension point for adapters that DO need
-  their own process (e.g. Redis, Memcached connection pools).
+  Spawns an internal monitor process that tracks every cache adapter
+  started via `Apero.Cache.start_link/2` and removes dead entries from
+  the `@adapters_table` ETS table.  This prevents the table from
+  accumulating stale entries when an adapter crashes.
+
+  ETS-backed adapters (the default `Apero.Cache.ETS`) attach directly
+  to the table they manage and do not need their own supervised process.
+  Redis/Memcached adapters that need a connection pool should be added
+  as children here.
   """
 
   use Supervisor
@@ -16,6 +22,11 @@ defmodule Apero.Cache.Supervisor do
 
   @impl true
   def init(_args) do
-    Supervisor.init([], strategy: :one_for_one)
+    children = [
+      Apero.Cache.AdapterMonitor
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end
+
