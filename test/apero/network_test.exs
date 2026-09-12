@@ -7,13 +7,13 @@ defmodule Apero.NetworkTest do
     test "resolves localhost to an IP" do
       assert {:ok, ips} = Network.resolve("localhost")
       assert is_list(ips)
-      assert length(ips) >= 1
+      assert ips != []
       Enum.each(ips, fn ip -> assert is_binary(ip) end)
     end
 
     test "resolves a known domain" do
       assert {:ok, ips} = Network.resolve("example.com")
-      assert length(ips) >= 1
+      assert ips != []
     end
 
     test "returns error for invalid host" do

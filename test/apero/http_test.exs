@@ -186,8 +186,7 @@ defmodule Apero.HttpTest do
     end
 
     test "accepts an optional body" do
-      req =
-        Delete.build(url: "https://example.com", body: %{reason: "obsolete"})
+      req = Delete.build(url: "https://example.com", body: %{reason: "obsolete"})
 
       assert req.body == %{reason: "obsolete"}
     end

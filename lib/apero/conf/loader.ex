@@ -6,15 +6,52 @@ defmodule Apero.Conf.Loader do
 
   @type format :: :json | :yaml | :toml
 
-  @doc "Loads a config file. Format is auto-detected from extension."
+  @doc "Loads a config file. Format is auto-detected from extension.
+
+  ## Options
+
+    * `:format` — force a specific format (`:json | :yaml | :toml`).
+    * `:defaults` — map of default values to deep-merge with the
+      loaded config.  Loaded values take precedence; defaults fill
+      missing keys at any depth.
+    * `:on_missing_default` — when `false`, an unset key in `:defaults`
+      that is also missing from the file is kept as-is.  Default `true`.
+
+  When `:defaults` is provided, returns `{:ok, merged_config}`.
+  Otherwise returns the loaded config as-is.
+  "
   @spec load(Path.t(), keyword()) :: {:ok, map()} | {:error, term()}
   def load(path, opts \\ []) do
     format = Keyword.get(opts, :format) || detect_format(path)
+    defaults = Keyword.get(opts, :defaults, %{})
 
-    case File.read(path) do
-      {:ok, content} -> parse(content, format)
+    with {:ok, content} <- File.read(path),
+         {:ok, parsed} <- parse(content, format) do
+      {:ok, deep_merge(defaults, parsed)}
+    else
       error -> error
     end
+  end
+
+  @doc """
+  Recursively merges `defaults` and `overrides` maps.
+
+  For each key:
+    - If only one side has the key, that value is used.
+    - If both sides have a map value, they are merged recursively.
+    - Otherwise the override wins.
+
+  Returns the merged map.  Neither input is mutated.
+  """
+  @spec deep_merge(map(), map()) :: map()
+  def deep_merge(defaults, overrides) when is_map(defaults) and is_map(overrides) do
+    Map.merge(defaults, overrides, fn _key, default_value, override_value ->
+      if is_map(default_value) and is_map(override_value) do
+        deep_merge(default_value, override_value)
+      else
+        override_value
+      end
+    end)
   end
 
   @doc "Parses a config string in the given format."

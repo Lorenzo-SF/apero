@@ -91,6 +91,29 @@ defmodule Apero.Packages do
     Proc.command_exists?(manager_binary(manager))
   end
 
+  @doc """
+  Lists the available package managers on the system as atoms.
+
+  Returns a list of manager atoms, in priority order for the current OS.
+  Empty list if no package manager is found.
+  """
+  @spec available_managers() :: [manager()]
+  def available_managers do
+    detect() |> Map.keys()
+  end
+
+  @doc """
+  Returns the binary path for a given package manager, or `nil` if not found.
+
+  Unlike `available?/1`, this returns the actual path so callers can
+  invoke the binary directly.
+  """
+  @spec path_for(manager()) :: String.t() | nil
+  def path_for(manager) when is_atom(manager) do
+    manager_binary(manager)
+    |> Proc.which()
+  end
+
   # ── Helpers ──────────────────────────────────────────────────────────
 
   defp manager_binary(:apt), do: "apt"

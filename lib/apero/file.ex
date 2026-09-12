@@ -184,8 +184,8 @@ defmodule Apero.File do
       :ok
 
   """
-  @spec atomic_write(binary(), iodata()) :: :ok | {:error, binary()}
-  defdelegate atomic_write(path, content), to: Apero.File.IO
+  @spec atomic_write(binary(), iodata(), keyword()) :: :ok | {:error, binary()}
+  defdelegate atomic_write(path, content, opts \\ []), to: Apero.File.IO
 
   @doc """
   Computes the checksum of a file by streaming its contents in 64KB chunks.

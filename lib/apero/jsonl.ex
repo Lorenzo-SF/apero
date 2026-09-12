@@ -89,10 +89,29 @@ defmodule Apero.Jsonl do
   """
   @spec stream!(binary()) :: Enumerable.t()
   def stream!(path) do
-    path
-    |> File.stream!(:line, [])
-    |> Stream.map(&decode_line/1)
-    |> Stream.reject(&is_nil/1)
+    if File.exists?(path) do
+      path
+      |> File.stream!(:line, [])
+      |> Stream.map(&decode_line/1)
+      |> Stream.reject(&is_nil/1)
+    else
+      # Empty stream for non-existent files (matches read_all/1's
+      # `{:error, :enoent}` behaviour but lazy — caller can still
+      # pipe through the result without crashing).
+      Stream.map([], fn _ -> nil end)
+      |> Stream.reject(&is_nil/1)
+    end
+  end
+
+  @doc """
+  Returns the size in bytes of the JSONL file, or 0 if it doesn't exist.
+  """
+  @spec size(binary()) :: non_neg_integer()
+  def size(path) do
+    case File.stat(path) do
+      {:ok, %{size: size}} -> size
+      {:error, _} -> 0
+    end
   end
 
   @doc """
