@@ -59,6 +59,23 @@ defmodule Apero.JsonlTest do
 
       assert Jsonl.stream!(@path) |> Enum.to_list() == [%{"a" => 1}]
     end
+
+    test "returns empty stream for non-existent file" do
+      path = "/tmp/nonexistent-#{System.unique_integer([:positive])}.jsonl"
+      assert Jsonl.stream!(path) |> Enum.to_list() == []
+    end
+  end
+
+  describe "size/1" do
+    test "returns file size in bytes" do
+      Jsonl.write!(@path, [%{"a" => 1}])
+      assert Jsonl.size(@path) > 0
+    end
+
+    test "returns 0 for non-existent file" do
+      path = "/tmp/nonexistent-#{System.unique_integer([:positive])}.jsonl"
+      assert Jsonl.size(path) == 0
+    end
   end
 
   describe "read_all/1" do
