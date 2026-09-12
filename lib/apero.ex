@@ -11,6 +11,7 @@ defmodule Apero do
 
   ### Security
   - `Apero.Crypto` — hashing, AES encryption, key and password generation
+    (DEPRECATED facade; use submodules directly)
   - `Apero.Crypto.Hash` — SHA-256, SHA-512, MD5, HMAC
   - `Apero.Crypto.Cipher` — AES-256-GCM, ChaCha20-Poly1305, AES-256-CTR streaming
   - `Apero.Crypto.Key` — PBKDF2, Argon2id, ECDH, RSA key generation
@@ -47,14 +48,16 @@ defmodule Apero do
   - `Trebejo.File` (watch/unwatch — depends on Arrea.WorkerSupervisor)
   """
 
-  # Crypto
+  # Crypto — P2-1 fix: delegate directly to submodules, not via the
+  # deprecated `Apero.Crypto` facade (which uses `CacheCrypto` alias
+  # that can fail if Cache isn't loaded).
   @doc "Delegates to `Apero.Crypto.Cipher.encrypt/2`."
   defdelegate encrypt(plaintext, key), to: Apero.Crypto.Cipher
 
   @doc "Delegates to `Apero.Crypto.Cipher.decrypt/2`."
   defdelegate decrypt(encoded, key), to: Apero.Crypto.Cipher
 
-  @doc "Delegates to `Apero.Crypto.Hash.sha256/1` (cached in ETS)."
+  @doc "Delegates to `Apero.Crypto.Hash.sha256/1` (cached in ETS via `Apero.Cache.Crypto`)."
   defdelegate sha256(data), to: Apero.Crypto.Hash
 
   @doc "Delegates to `Apero.Crypto.Hash.sha512/1`."

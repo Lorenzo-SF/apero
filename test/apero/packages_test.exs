@@ -46,4 +46,28 @@ defmodule Apero.PackagesTest do
       assert is_boolean(Packages.available?(:pacman))
     end
   end
+
+  describe "available_managers/0" do
+    test "returns a list of atoms" do
+      managers = Packages.available_managers()
+      assert is_list(managers)
+      Enum.each(managers, fn mgr -> assert is_atom(mgr) end)
+    end
+
+    test "agrees with detect/0 keys" do
+      assert Packages.available_managers() |> Enum.sort() ==
+               Packages.detect() |> Map.keys() |> Enum.sort()
+    end
+  end
+
+  describe "path_for/1" do
+    test "returns nil for missing manager" do
+      assert Packages.path_for(:nonexistent_manager_xyz) == nil
+    end
+
+    test "returns binary path or nil for known manager" do
+      result = Packages.path_for(:brew)
+      assert result == nil or is_binary(result)
+    end
+  end
 end

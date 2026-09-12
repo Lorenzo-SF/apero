@@ -82,6 +82,16 @@ defmodule Apero.RateLimitTest do
       # refill_per_second = 0 → capacity can never free up → :rate_limited
       assert RateLimit.wait(:w_stall, 1, 50) == {:error, :rate_limited}
     end
+
+    test "wait/3 uses receive-based loop, not recursion (P1-5 fix)" do
+      RateLimit.new(name: :w_loop, capacity: 1, refill_per_second: 100.0)
+
+      assert RateLimit.check(:w_loop) == :ok
+      # If wait/3 were recursive, a long timeout would stack-overflow.
+      # With 600 iterations of 10ms = 6s of wait, the receive-based
+      # implementation stays flat.
+      assert RateLimit.wait(:w_loop, 1, 600) == :ok
+    end
   end
 
   describe "concurrent access" do

@@ -103,7 +103,6 @@ defmodule Apero.MixProject do
           Apero.Http.Request,
           Apero.Http.Response,
           Apero.Http.Error,
-          Apero.Http.Method,
           Apero.Http.Adapter,
           Apero.Http.Finch
         ]

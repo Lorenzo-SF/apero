@@ -22,6 +22,8 @@ defmodule Apero.Cache do
       Apero.Cache.put(:redis_cache, "key", "value")
   """
 
+  alias Apero.Cache.AdapterMonitor
+
   @adapters_table :apero_cache_adapters
 
   @type cache_name :: atom() | pid()
@@ -29,7 +31,7 @@ defmodule Apero.Cache do
   @doc "Starts a cache backend. Returns `{:ok, pid}`."
   @spec start_link(module(), keyword()) :: GenServer.on_start()
   def start_link(adapter, opts \\ []) do
-    ensure_table!()
+    init_adapters_table!()
 
     case adapter.start_link(opts) do
       {:ok, pid} ->
@@ -38,13 +40,31 @@ defmodule Apero.Cache do
         end
 
         :ets.insert(@adapters_table, {pid, adapter})
-        Process.monitor(pid)
+        # Hand the monitor to AdapterMonitor so the cleanup outlives
+        # the caller's lifecycle (P1-4).
+        if Process.whereis(AdapterMonitor) do
+          AdapterMonitor.track(pid)
+        else
+          Process.monitor(pid)
+        end
 
         {:ok, pid}
 
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  @doc """
+  Initialises the adapters table at boot.
+
+  Called from `Apero.Application.start/2`. Exposed publicly so that
+  standalone scripts that don't start the full supervision tree can
+  still create the table (idempotent).
+  """
+  @spec init_adapters_table!() :: :ok
+  def init_adapters_table! do
+    ensure_table!()
   end
 
   @doc "Stores a value. Optional `:ttl` in seconds."

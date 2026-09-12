@@ -12,13 +12,16 @@ defmodule Apero.File.IO do
   """
 
   @doc false
-  @spec atomic_write(binary(), iodata()) :: :ok | {:error, binary()}
-  def atomic_write(path, content) do
+  @spec atomic_write(binary(), iodata(), keyword()) :: :ok | {:error, binary()}
+  def atomic_write(path, content, opts \\ []) do
+    fsync? = Keyword.get(opts, :fsync, false)
+
     dir = Path.dirname(path)
     tmp = Path.join(dir, ".apero_tmp_#{:erlang.unique_integer([:positive])}")
 
     with :ok <- File.mkdir_p(dir),
          :ok <- File.write(tmp, content),
+         :ok <- maybe_fsync(tmp, fsync?),
          :ok <- commit_atomic_write(tmp, path) do
       :ok
     else
@@ -27,6 +30,27 @@ defmodule Apero.File.IO do
         {:error, "atomic_write failed for #{path}: #{reason}"}
     end
   end
+
+  # P0-5: optional `fsync` for callers that need durability guarantees
+  # (e.g. encryption master keys).  When `true`, the tmp file is
+  # flushed to disk via `:file.datasync/1` before the rename.  This is
+  # a no-op when `false` (the default), preserving the original
+  # performance profile.
+  defp maybe_fsync(path, true) do
+    case File.open(path, [:read, :raw]) do
+      {:ok, fd} ->
+        try do
+          :file.datasync(fd)
+        after
+          File.close(fd)
+        end
+
+      err ->
+        err
+    end
+  end
+
+  defp maybe_fsync(_path, false), do: :ok
 
   defp commit_atomic_write(tmp, path) do
     case File.rename(tmp, path) do
@@ -129,6 +153,9 @@ defmodule Apero.File.IO do
     retry_ms = Keyword.get(opts, :retry_ms, 100)
     deadline = System.monotonic_time(:millisecond) + timeout_ms
 
+    # Trap exits so a crash inside `fun` (or a kill signal to this
+    # process) doesn't leave the lock file orphaned on disk (P0-4).
+    Process.flag(:trap_exit, true)
     acquire_lock(lock_path, deadline, retry_ms, fun)
   end
 
@@ -171,6 +198,13 @@ defmodule Apero.File.IO do
         {:ok, file} ->
           try do
             fun.()
+          catch
+            kind, reason ->
+              # P0-4: ensure the lock file is cleaned even when fun
+              # raises or the linked process dies.
+              File.close(file)
+              File.rm(lock_path)
+              :erlang.raise(kind, reason, __STACKTRACE__)
           after
             File.close(file)
             File.rm(lock_path)
