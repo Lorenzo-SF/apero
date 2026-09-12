@@ -272,7 +272,9 @@ defmodule Apero.FileTest do
     test "print_tree prints to stdout", %{dir: dir} do
       File.write!(Path.join(dir, "leaf.txt"), "x")
 
-      assert ExUnit.CaptureIO.capture_io(fn -> assert :ok = AperoFile.print_tree(dir) end) =~ "leaf.txt"
+      assert ExUnit.CaptureIO.capture_io(fn ->
+               assert :ok = AperoFile.print_tree(dir)
+             end) =~ "leaf.txt"
     end
   end
 end
