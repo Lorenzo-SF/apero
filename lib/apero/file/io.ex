@@ -147,7 +147,7 @@ defmodule Apero.File.IO do
   end
 
   @doc false
-  @spec with_lock(binary(), keyword(), (() -> any())) :: any() | {:error, :timeout}
+  @spec with_lock(binary(), keyword(), (-> any())) :: any() | {:error, :timeout}
   def with_lock(lock_path, opts \\ [], fun) when is_function(fun, 0) do
     timeout_ms = Keyword.get(opts, :timeout_ms, 5_000)
     retry_ms = Keyword.get(opts, :retry_ms, 100)

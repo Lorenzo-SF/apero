@@ -248,7 +248,7 @@ defmodule Apero.File do
     * `:timeout_ms` — how long to wait in ms (default: `5_000`)
     * `:retry_ms` — poll interval in ms (default: `100`)
   """
-  @spec with_lock(binary(), keyword(), (() -> any())) :: any() | {:error, :timeout}
+  @spec with_lock(binary(), keyword(), (-> any())) :: any() | {:error, :timeout}
   defdelegate with_lock(lock_path, opts \\ [], fun), to: Apero.File.IO
 
   @doc """
