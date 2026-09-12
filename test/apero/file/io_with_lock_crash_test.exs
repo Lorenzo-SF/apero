@@ -9,7 +9,7 @@ defmodule Apero.File.IO.WithLockCrashTest do
     lock = Path.join(base, "my.lock")
 
     assert_raise RuntimeError, fn ->
-      IO.with_lock(lock, timeout_ms: 1000, retry_ms: 50, fn ->
+      IO.with_lock(lock, [timeout_ms: 1000, retry_ms: 50], fn ->
         raise "boom"
       end)
     end

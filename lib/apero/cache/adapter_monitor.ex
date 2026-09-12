@@ -42,7 +42,7 @@ defmodule Apero.Cache.AdapterMonitor do
 
   Called from `Apero.Cache.start_link/2`.  Idempotent.
   """
-  @spec track(pid()) :: ref()
+  @spec track(pid()) :: reference()
   def track(pid) when is_pid(pid) do
     ref = Process.monitor(pid)
     GenServer.cast(__MODULE__, {:track, pid, ref})
