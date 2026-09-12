@@ -2,6 +2,7 @@ defmodule Apero.FileTest do
   use ExUnit.Case, async: true
 
   alias Apero.File
+  alias ExUnit.CaptureIO
 
   @tmp System.tmp_dir!()
 
@@ -272,7 +273,7 @@ defmodule Apero.FileTest do
     test "print_tree prints to stdout", %{dir: dir} do
       File.write!(Path.join(dir, "leaf.txt"), "x")
 
-      assert ExUnit.CaptureIO.capture_io(fn ->
+      assert CaptureIO.capture_io(fn ->
                assert :ok = File.print_tree(dir)
              end) =~ "leaf.txt"
     end
