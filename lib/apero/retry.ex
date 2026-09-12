@@ -42,7 +42,7 @@ defmodule Apero.Retry do
     * `:on_retry` — `(%{attempt: integer(), result: any(), delay: integer()} -> any())`
       invoked before each sleep (or send-after)
   """
-  @spec with((-> any()), keyword()) :: any()
+  @spec with((() -> any()), keyword()) :: any()
   def with(fun, opts \\ []) do
     max_attempts = Keyword.get(opts, :max_attempts, @default_max_attempts)
     base_delay = Keyword.get(opts, :base_delay, @default_base_delay)
@@ -71,7 +71,7 @@ defmodule Apero.Retry do
   loop.
   """
   @spec schedule_next(
-          (-> any()),
+          (() -> any()),
           integer(),
           integer(),
           integer(),
@@ -105,7 +105,7 @@ defmodule Apero.Retry do
   This is the GenServer hook for non-blocking retry.
   """
   @spec handle_message(
-          {:apero_retry, (-> any()), integer(), integer(), integer(), integer(),
+          {:apero_retry, (() -> any()), integer(), integer(), integer(), integer(),
            (any() -> boolean()), (map() -> any())}
         ) :: any()
   def handle_message({:apero_retry, fun, attempt, max, base, max_d, should_retry?, on_retry}) do

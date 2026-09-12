@@ -42,17 +42,20 @@ defmodule Apero.Conf.LoaderTest do
 
   describe "load/2 with :defaults" do
     test "deep-merges defaults with loaded JSON" do
-      path = Path.join(System.tmp_dir(), "apero-loader-#{System.unique_integer([:positive])}.json")
+      path =
+        Path.join(System.tmp_dir(), "apero-loader-#{System.unique_integer([:positive])}.json")
+
       File.write!(path, ~s({"b": 2, "c": 3}))
 
       defaults = %{a: 1, b: 0}
 
-      assert {:ok, %{a: 1, b: 2, c: 3}} =
-               Loader.load(path, defaults: defaults)
+      assert {:ok, %{a: 1, b: 2, c: 3}} = Loader.load(path, defaults: defaults)
     end
 
     test "without :defaults, returns loaded config as-is" do
-      path = Path.join(System.tmp_dir(), "apero-loader-#{System.unique_integer([:positive])}.json")
+      path =
+        Path.join(System.tmp_dir(), "apero-loader-#{System.unique_integer([:positive])}.json")
+
       File.write!(path, ~s({"a": 1}))
 
       assert {:ok, %{"a" => 1}} = Loader.load(path)

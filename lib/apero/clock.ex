@@ -73,7 +73,7 @@ defmodule Apero.Clock do
       ...> end)
       ~U[2026-07-31 14:00:00.000000Z]
   """
-  @spec with_fixed(DateTime.t(), (-> result)) :: result when result: any()
+  @spec with_fixed(DateTime.t(), (() -> result)) :: result when result: any()
   def with_fixed(dt, fun) do
     previous = :persistent_term.get(@override_key, nil)
 

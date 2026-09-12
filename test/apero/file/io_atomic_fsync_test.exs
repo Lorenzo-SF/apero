@@ -19,7 +19,9 @@ defmodule Apero.File.IO.AtomicFsyncTest do
   end
 
   test "atomic_write/3 still creates parent dirs" do
-    base = Path.join(System.tmp_dir!(), "apero_fsync_parent_#{System.unique_integer([:positive])}")
+    base =
+      Path.join(System.tmp_dir!(), "apero_fsync_parent_#{System.unique_integer([:positive])}")
+
     path = Path.join([base, "sub", "file.txt"])
     :ok = IO.atomic_write(path, "deep", fsync: true)
     assert File.read!(path) == "deep"
@@ -29,7 +31,9 @@ defmodule Apero.File.IO.AtomicFsyncTest do
   test "atomic_write/3 fsync: true on non-existent path returns ok" do
     # The fsync step is on the tmp file, which always exists at that
     # point (File.write returned :ok).  So this should succeed.
-    path = Path.join(System.tmp_dir!(), "apero_fsync_new_#{System.unique_integer([:positive])}.txt")
+    path =
+      Path.join(System.tmp_dir!(), "apero_fsync_new_#{System.unique_integer([:positive])}.txt")
+
     :ok = IO.atomic_write(path, "new file with fsync", fsync: true)
     assert File.read!(path) == "new file with fsync"
     File.rm!(path)

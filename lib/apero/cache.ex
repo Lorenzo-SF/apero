@@ -74,7 +74,7 @@ defmodule Apero.Cache do
   def get(cache, key), do: adapter(cache).get(cache, key)
 
   @doc "Fetches or computes a value (cache-aside pattern)."
-  @spec fetch(cache_name(), term(), (-> term()), keyword()) :: {:ok, term()} | {:error, term()}
+  @spec fetch(cache_name(), term(), (() -> term()), keyword()) :: {:ok, term()} | {:error, term()}
   def fetch(cache, key, fun, opts \\ []) when is_function(fun, 0) do
     case get(cache, key) do
       {:ok, value} ->
