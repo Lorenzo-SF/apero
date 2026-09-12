@@ -26,7 +26,7 @@ defmodule Apero.File.IO.WithLockCrashTest do
 
     # Spawn a process that links to ours and dies inside the lock.
     assert_raise RuntimeError, fn ->
-      IO.with_lock(lock, timeout_ms: 1000, retry_ms: 50, fn ->
+      IO.with_lock(lock, [timeout_ms: 1000, retry_ms: 50], fn ->
         spawn_link(fn -> raise "linked child crash" end)
         Process.sleep(100)
         # The linked crash propagates as an EXIT signal.
