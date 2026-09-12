@@ -1,7 +1,7 @@
 defmodule Apero.FileTest do
   use ExUnit.Case, async: true
 
-  alias Apero.File, as: AperoFile
+  alias Apero.File
 
   @tmp System.tmp_dir!()
 
@@ -16,34 +16,34 @@ defmodule Apero.FileTest do
     test "dir?/1 and file?/1", %{dir: dir} do
       file = Path.join(dir, "a.txt")
       File.write!(file, "x")
-      assert AperoFile.dir?(dir)
-      refute AperoFile.dir?(file)
-      assert AperoFile.file?(file)
-      refute AperoFile.file?(dir)
+      assert File.dir?(dir)
+      refute File.dir?(file)
+      assert File.file?(file)
+      refute File.file?(dir)
     end
 
     test "exists?/1", %{dir: dir} do
-      assert AperoFile.exists?(dir)
-      refute AperoFile.exists?(Path.join(dir, "nope"))
+      assert File.exists?(dir)
+      refute File.exists?(Path.join(dir, "nope"))
     end
   end
 
   describe "ensure_dir/1, write/2, read/1" do
     test "writes nested paths", %{dir: dir} do
       path = Path.join([dir, "a", "b", "c.txt"])
-      assert :ok = AperoFile.ensure_dir(Path.dirname(path))
-      assert :ok = AperoFile.write(path, "hello")
-      assert {:ok, "hello"} = AperoFile.read(path)
+      assert :ok = File.ensure_dir(Path.dirname(path))
+      assert :ok = File.write(path, "hello")
+      assert {:ok, "hello"} = File.read(path)
     end
 
     test "read of missing file returns error", %{dir: dir} do
-      assert {:error, _} = AperoFile.read(Path.join(dir, "missing.txt"))
+      assert {:error, _} = File.read(Path.join(dir, "missing.txt"))
     end
 
     test "read_lines/1 filters comments and blanks", %{dir: dir} do
       path = Path.join(dir, "lines.txt")
       File.write!(path, "# comment\n\n  alpha  \nbeta\n")
-      assert {:ok, ["alpha", "beta"]} = AperoFile.read_lines(path)
+      assert {:ok, ["alpha", "beta"]} = File.read_lines(path)
     end
   end
 
@@ -273,7 +273,7 @@ defmodule Apero.FileTest do
       File.write!(Path.join(dir, "leaf.txt"), "x")
 
       assert ExUnit.CaptureIO.capture_io(fn ->
-               assert :ok = AperoFile.print_tree(dir)
+               assert :ok = File.print_tree(dir)
              end) =~ "leaf.txt"
     end
   end
