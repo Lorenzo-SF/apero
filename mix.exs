@@ -70,7 +70,9 @@ defmodule Apero.MixProject do
           Apero.Application,
           Apero.Cache,
           Apero.Cache.Adapter,
-          Apero.Cache.Ets,
+          Apero.Cache.AdapterMonitor,
+          Apero.Cache.Crypto,
+          Apero.Cache.ETS,
           Apero.Cache.Supervisor
         ],
         "File & Path": [
@@ -89,9 +91,18 @@ defmodule Apero.MixProject do
           Apero.Crypto.Key,
           Apero.Crypto.Random
         ],
-        Environment: [Apero.Env, Apero.Conf],
-        System: [Apero.OS, Apero.Proc],
-        "Retry & Cache": [Apero.Retry, Apero.Cache],
+        Environment: [
+          Apero.Env,
+          Apero.Env.Loader,
+          Apero.Env.Serializer,
+          Apero.Env.Store,
+          Apero.Conf,
+          Apero.Conf.Atom,
+          Apero.Conf.Loader,
+          Apero.Conf.Validator
+        ],
+        System: [Apero.OS, Apero.Proc, Apero.Network, Apero.Packages],
+        "Retry & Cache": [Apero.Retry],
         "Rate Limit & Backoff": [
           Apero.RateLimit,
           Apero.RateLimit.Bucket,
@@ -104,12 +115,18 @@ defmodule Apero.MixProject do
           Apero.Http.Response,
           Apero.Http.Error,
           Apero.Http.Adapter,
-          Apero.Http.Finch
+          Apero.Http.Adapter.Finch,
+          Apero.Http.Finch,
+          Apero.Http.Method,
+          Apero.Http.Method.Get,
+          Apero.Http.Method.Post,
+          Apero.Http.Method.Put,
+          Apero.Http.Method.Patch,
+          Apero.Http.Method.Delete,
+          Apero.Http.Method.Query
         ]
       ],
-      source_url: "https://github.com/Lorenzo-SF/apero",
-      homepage_url: "https://github.com/Lorenzo-SF/apero",
-      source_ref: "3.0.0"
+      source_ref: "4.0.0"
     ]
   end
 

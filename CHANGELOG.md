@@ -5,7 +5,7 @@ All notable changes to Apero are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.0.0] — 2026-07-31
+## [4.0.0] — 2026-09-18
 
 ### Added
 - `Apero.RateLimit` — token bucket and leaky bucket rate limiting.
@@ -30,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `append!/3`, `stream!/1`, `read_all/1`, `recover/2`. Corrupted and
   truncated final lines are skipped (with `Logger.warning`) so a crashed
   writer does not corrupt subsequent reads.
+- `@doc` strings for every public function in the `Apero` facade
+  (`encrypt/2`, `decrypt/2`, `sha256/1`, `sha512/1`, `md5/1`, `get_env/2`,
+  `put_env/2`, `os_type/0`, `retry/2`).
+- `@doc` for `Apero.Retry.with/2` documenting options and the
+  blocking vs non-blocking paths.
+- `@doc` for `Apero.File.Watcher.start_link/1` documenting required
+  `:dirs` and `:callback` options and `:debounce_ms`.
 
 ### Changed
 - `Apero.Application` now starts `Apero.RateLimit.Registry` (unique
@@ -40,26 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (hash collisions/determinism, `secure_compare` length mismatch).
 - CI: `mix format --check-formatted` added to the lint job; `mix lint`
   alias now checks formatting instead of rewriting in place.
-
-### Pipeline
-- `mix format` — clean, no diff.
-- `mix compile --warnings-as-errors` — exit 0.
-- `mix credo --strict` — 0 issues.
-- `mix test` — 245 tests, 8 properties, 0 failures.
-- `mix dialyzer` — 0 errors.
-
-## [Unreleased]
-
-### Added
-- `@doc` strings for every public function in the `Apero` facade
-  (`encrypt/2`, `decrypt/2`, `sha256/1`, `sha512/1`, `md5/1`, `get_env/2`,
-  `put_env/2`, `os_type/0`, `retry/2`).
-- `@doc` for `Apero.Retry.with/2` documenting options and the
-  blocking vs non-blocking paths.
-- `@doc` for `Apero.File.Watcher.start_link/1` documenting required
-  `:dirs` and `:callback` options and `:debounce_ms`.
-
-### Changed
 - `Apero.Conf.get/2` and `Apero.Conf.set/3` no longer fall back to
   `String.to_atom/1`. The implementation now uses
   `String.to_existing_atom/1` and preserves string keys when no atom
@@ -90,8 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Pipeline
 - `mix format` — clean, no diff.
 - `mix compile --warnings-as-errors` — exit 0.
-- `mix credo --strict --format=json` — 0 issues.
-- `mix test --cover` — 172 tests, 0 failures, 48.7% coverage.
+- `mix credo --strict` — 0 issues.
+- `mix test` — 245 tests, 8 properties, 0 failures.
 - `mix dialyzer` — 0 errors.
 
 ## [3.1.0] — 2026-07-19
@@ -128,6 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Apero v3.0.0 split shell utilities out to Trebejo. Apero is now
   pure Elixir/Erlang with no shell execution.
 
-[Unreleased]: https://github.com/Lorenzo-SF/apero/compare/v3.1.0...HEAD
-[3.1.0]: https://github.com/Lorenzo-SF/apero/releases/tag/v3.1.0
-[3.0.0]: https://github.com/Lorenzo-SF/apero/releases/tag/v3.0.0
+[4.0.0]: https://hex.pm/packages/apero/4.0.0
+[3.1.0]: https://hex.pm/packages/apero/3.1.0
+[3.0.0]: https://hex.pm/packages/apero/3.0.0
+[Unreleased]: https://github.com/Lorenzo-SF/apero/compare/4.0.0...HEAD
