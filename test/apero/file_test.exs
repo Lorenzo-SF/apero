@@ -1,7 +1,7 @@
 defmodule Apero.FileTest do
   use ExUnit.Case, async: true
 
-  alias Apero.File
+  alias Apero.File, as: AperoFile
   alias ExUnit.CaptureIO
 
   @tmp System.tmp_dir!()
@@ -17,34 +17,34 @@ defmodule Apero.FileTest do
     test "dir?/1 and file?/1", %{dir: dir} do
       file = Path.join(dir, "a.txt")
       File.write!(file, "x")
-      assert File.dir?(dir)
-      refute File.dir?(file)
-      assert File.file?(file)
-      refute File.file?(dir)
+      assert AperoFile.dir?(dir)
+      refute AperoFile.dir?(file)
+      assert AperoFile.file?(file)
+      refute AperoFile.file?(dir)
     end
 
     test "exists?/1", %{dir: dir} do
-      assert File.exists?(dir)
-      refute File.exists?(Path.join(dir, "nope"))
+      assert AperoFile.exists?(dir)
+      refute AperoFile.exists?(Path.join(dir, "nope"))
     end
   end
 
   describe "ensure_dir/1, write/2, read/1" do
     test "writes nested paths", %{dir: dir} do
       path = Path.join([dir, "a", "b", "c.txt"])
-      assert :ok = File.ensure_dir(Path.dirname(path))
-      assert :ok = File.write(path, "hello")
-      assert {:ok, "hello"} = File.read(path)
+      assert :ok = AperoFile.ensure_dir(Path.dirname(path))
+      assert :ok = AperoFile.write(path, "hello")
+      assert {:ok, "hello"} = AperoFile.read(path)
     end
 
     test "read of missing file returns error", %{dir: dir} do
-      assert {:error, _} = File.read(Path.join(dir, "missing.txt"))
+      assert {:error, _} = AperoFile.read(Path.join(dir, "missing.txt"))
     end
 
     test "read_lines/1 filters comments and blanks", %{dir: dir} do
       path = Path.join(dir, "lines.txt")
       File.write!(path, "# comment\n\n  alpha  \nbeta\n")
-      assert {:ok, ["alpha", "beta"]} = File.read_lines(path)
+      assert {:ok, ["alpha", "beta"]} = AperoFile.read_lines(path)
     end
   end
 
@@ -91,7 +91,7 @@ defmodule Apero.FileTest do
       dst = Path.join(dir, "m2.txt")
       File.write!(src, "data")
       assert :ok = AperoFile.move(src, dst)
-      refute File.exists?(src)
+      refute AperoFile.exists?(src)
       assert File.read!(dst) == "data"
     end
 
@@ -111,7 +111,7 @@ defmodule Apero.FileTest do
       File.mkdir_p!(Path.join(sub, "inner"))
       File.write!(Path.join([sub, "inner", "f.txt"]), "x")
       assert :ok = AperoFile.delete_dir(sub)
-      refute File.exists?(sub)
+      refute AperoFile.exists?(sub)
     end
   end
 
@@ -199,11 +199,11 @@ defmodule Apero.FileTest do
     test "tmp file created and cleaned up", %{dir: dir} do
       path =
         AperoFile.with_tmp_file([dir: dir], fn p ->
-          assert File.exists?(p)
+          assert AperoFile.exists?(p)
           p
         end)
 
-      refute File.exists?(path)
+      refute AperoFile.exists?(path)
     end
 
     test "tmp file cleaned up on raise" do
@@ -215,11 +215,11 @@ defmodule Apero.FileTest do
     test "tmp dir created and cleaned up", %{dir: dir} do
       tmp_dir =
         AperoFile.with_tmp_dir([dir: dir], fn d ->
-          assert File.dir?(d)
+          assert AperoFile.dir?(d)
           d
         end)
 
-      refute File.exists?(tmp_dir)
+      refute AperoFile.exists?(tmp_dir)
     end
   end
 
@@ -227,7 +227,7 @@ defmodule Apero.FileTest do
     test "acquires lock, runs fun, releases", %{dir: dir} do
       lock = Path.join(dir, "lockfile")
       assert AperoFile.with_lock(lock, fn -> :locked_result end) == :locked_result
-      refute File.exists?(lock)
+      refute AperoFile.exists?(lock)
     end
 
     test "times out when lock is held", %{dir: dir} do
@@ -274,7 +274,7 @@ defmodule Apero.FileTest do
       File.write!(Path.join(dir, "leaf.txt"), "x")
 
       assert CaptureIO.capture_io(fn ->
-               assert :ok = File.print_tree(dir)
+               assert :ok = AperoFile.print_tree(dir)
              end) =~ "leaf.txt"
     end
   end

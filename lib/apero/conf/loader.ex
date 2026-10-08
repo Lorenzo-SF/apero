@@ -27,7 +27,16 @@ defmodule Apero.Conf.Loader do
 
     with {:ok, content} <- File.read(path),
          {:ok, parsed} <- parse(content, format) do
-      {:ok, deep_merge(defaults, parsed)}
+      # When merging with atom-keyed defaults, normalise the loaded
+      # map's string keys to atoms so the merge collapses cleanly.
+      merged =
+        if defaults == %{} do
+          parsed
+        else
+          deep_merge(defaults, atomize_keys(parsed))
+        end
+
+      {:ok, merged}
     else
       error -> error
     end
@@ -53,6 +62,21 @@ defmodule Apero.Conf.Loader do
       end
     end)
   end
+
+  # Recursively converts string keys in a map to atoms so deep_merge
+  # can collapse a JSON-loaded config (string keys) with an atom-keyed
+  # defaults map. Only safe when the keys are valid atom names; this
+  # is the expected shape for the JSON/YAML/TOML configs Apero handles.
+  defp atomize_keys(map) when is_map(map) do
+    Map.new(map, fn
+      {k, v} when is_binary(k) -> {String.to_existing_atom(k), atomize_keys(v)}
+      {k, v} when is_atom(k) -> {k, atomize_keys(v)}
+      other -> other
+    end)
+  end
+
+  defp atomize_keys(list) when is_list(list), do: Enum.map(list, &atomize_keys/1)
+  defp atomize_keys(other), do: other
 
   @doc "Parses a config string in the given format."
   @spec parse(String.t(), format()) :: {:ok, map()} | {:error, term()}

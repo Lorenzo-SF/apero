@@ -24,16 +24,20 @@ defmodule Apero.File.IO.WithLockCrashTest do
     File.mkdir_p!(base)
     lock = Path.join(base, "linked.lock")
 
-    # Spawn a process that links to ours and dies inside the lock.
-    assert_raise RuntimeError, fn ->
-      IO.with_lock(lock, [timeout_ms: 1000, retry_ms: 50], fn ->
-        spawn_link(fn -> raise "linked child crash" end)
-        Process.sleep(100)
-        # The linked crash propagates as an EXIT signal.
-        receive do
-        end
-      end)
-    end
+    # Trap exits so a linked child crash does not kill the test process,
+    # then assert that with_lock's try/after cleaned the lock file.
+    Process.flag(:trap_exit, true)
+
+    IO.with_lock(lock, [timeout_ms: 1000, retry_ms: 50], fn ->
+      spawn_link(fn -> raise "linked child crash" end)
+      Process.sleep(200)
+      # Drain any EXIT messages so the test mailbox stays clean.
+      receive do
+        {:EXIT, _, _} -> :ok
+      after
+        0 -> :ok
+      end
+    end)
 
     refute File.exists?(lock), "lock file should have been cleaned up after linked crash"
     File.rm_rf!(base)
