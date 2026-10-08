@@ -26,10 +26,18 @@ defmodule Apero.OSTest do
 
     test "matches platform" do
       case OS.type() do
-        :macos -> assert OS.distro() == "macOS"
-        :windows -> assert OS.distro() == "Windows"
-        :linux -> assert OS.distro() =~ ~r/(Linux|Ubuntu|Fedora|Arch|Debian|Cachy|Manjaro|NixOS|openSUSE|CentOS|Red Hat|Alma|Rocky|Mint|elementary)/
-        _ -> assert OS.distro() == "unknown"
+        :macos ->
+          assert OS.distro() == "macOS"
+
+        :windows ->
+          assert OS.distro() == "Windows"
+
+        :linux ->
+          assert OS.distro() =~
+                   ~r/(Linux|Ubuntu|Fedora|Arch|Debian|Cachy|Manjaro|NixOS|openSUSE|CentOS|Red Hat|Alma|Rocky|Mint|elementary)/
+
+        _ ->
+          assert OS.distro() == "unknown"
       end
     end
   end
