@@ -5,6 +5,54 @@ All notable changes to Apero are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] — 2026-10-08
+
+### Fixed
+
+- **`Apero.FileTest` (34 tests)**: the test file imported a
+  non-existent `AperoFile` (no `.`) module. Aliased
+  `Apero.File, as: AperoFile` and rewrote the assertions that
+  were accidentally hitting `File.<op>` (the Elixir standard
+  library) instead of `Apero.File.<op>`. All 34 tests now pass
+  against the real `Apero.File` public API.
+- **`Apero.Cache.Crypto`** ETS table not initialised at boot:
+  `Apero.Application` now calls `CacheCrypto.init_table/0`
+  alongside the existing `Cache.init_adapters_table!/0` so
+  `Apero.Crypto.{md5,sha256,sha512}` (and the 3 corresponding
+  memoisation tests) work without a stale ETS race.
+- **`Apero.Cache.AdapterMonitor`**: the `track/1` callback was
+  racing its own monitor — the function called `Process.monitor`
+  before delegating to a `GenServer.cast` that called it again,
+  so the `:DOWN` message landed on the caller's mailbox and the
+  GenServer's cleanup never fired. Switched to a synchronous
+  `GenServer.call` that owns the monitor and a state map keyed
+  by PID (not ref) so the lookup is unambiguous.
+- **`Apero.Conf.Loader.load/2` with `:defaults`**: the merge
+  was producing `%{a: 1, b: 0, "b" => 2, "c" => 3}` because
+  JSON-loaded keys are strings while defaults are atoms. Added
+  an `atomize_keys/1` walk that converts the parsed map to
+  atoms before merging when `:defaults` is non-empty.
+- **`Apero.Packages.path_for/1`**: passing an unknown manager
+  atom raised `FunctionClauseError` from the `manager_binary/1`
+  clauses. Added a catch-all that returns `nil` and reordered
+  `:port`/`:nix` above the catch-all (they were previously
+  unreachable because `_` was matching first).
+- **`Apero.OS.distro/0` test**: the regex assumed
+  `Linux|Ubuntu|Fedora|Arch|Debian` but the test machine
+  (CachyOS) reports `CachyOS`. Widened the pattern to
+  `Linux|Ubuntu|Fedora|Arch|Debian|Cachy|Manjaro|NixOS|...`.
+- **`Apero.File.IO.with_lock/3` linked-process test**: the
+  `spawn_link + Process.sleep + assert_raise` pattern killed
+  the test process before the `assert_raise` could capture
+  anything. Switched to `Process.flag(:trap_exit, true)` so
+  the linked crash is contained and the test can assert on
+  the cleaned-up lock file.
+- **`Apero.Cache.Supervisor` start_link test**: the assertion
+  `{:ok, pid} = Supervisor.start_link([])` failed because the
+  supervisor was already started by `Apero.Application`.
+  Switched the test to look up the registered name with
+  `Process.whereis/1`.
+
 ## [4.0.0] — 2026-09-18
 
 ### Added
@@ -118,4 +166,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [4.0.0]: https://hex.pm/packages/apero/4.0.0
 [3.1.0]: https://hex.pm/packages/apero/3.1.0
 [3.0.0]: https://hex.pm/packages/apero/3.0.0
-[Unreleased]: https://github.com/Lorenzo-SF/apero/compare/4.0.0...HEAD
+[Unreleased]: https://github.com/Lorenzo-SF/apero/compare/4.1.0...HEAD
+[4.1.0]: https://github.com/Lorenzo-SF/apero/compare/4.0.0...4.1.0
