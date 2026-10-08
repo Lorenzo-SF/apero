@@ -44,30 +44,37 @@ defmodule Apero.Cache.AdapterMonitor do
   """
   @spec track(pid()) :: reference()
   def track(pid) when is_pid(pid) do
-    ref = Process.monitor(pid)
-    GenServer.cast(__MODULE__, {:track, pid, ref})
+    ref = GenServer.call(__MODULE__, {:track, pid})
     ref
   end
 
   @impl true
-  def handle_cast({:track, pid, ref}, state) do
-    Process.monitor(pid)
-    {:noreply, Map.put(state, ref, pid)}
+  def handle_call({:track, pid}, _from, state) do
+    case Map.get(state, pid) do
+      nil ->
+        ref = Process.monitor(pid)
+        {:reply, ref, Map.put(state, pid, ref)}
+
+      ref ->
+        # Already tracking this PID; return the existing ref.
+        # If the previous monitor was lost, attach a fresh one.
+        if Process.info(pid) == nil do
+          new_ref = Process.monitor(pid)
+          {:reply, new_ref, Map.put(state, pid, new_ref)}
+        else
+          {:reply, ref, state}
+        end
+    end
   end
 
   @impl true
-  def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
-    # Remove any entries in @adapters_table that point to the dead PID.
-    # We don't track which PID each ref belongs to (the ref->pid map is
-    # already removed below), but the table can only have one entry per
-    # PID so the match is unambiguous.
-    :ets.match_delete(@table, {pid_for_ref(state, ref), :_})
-    {:noreply, Map.delete(state, ref)}
+  def handle_cast(_msg, state), do: {:noreply, state}
+
+  @impl true
+  def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
+    :ets.match_delete(@table, {pid, :_})
+    {:noreply, Map.delete(state, pid)}
   end
 
   def handle_info(_msg, state), do: {:noreply, state}
-
-  defp pid_for_ref(state, ref) do
-    Map.get(state, ref)
-  end
 end

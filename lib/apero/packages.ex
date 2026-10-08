@@ -110,8 +110,10 @@ defmodule Apero.Packages do
   """
   @spec path_for(manager()) :: String.t() | nil
   def path_for(manager) when is_atom(manager) do
-    manager_binary(manager)
-    |> Proc.which()
+    case manager_binary(manager) do
+      nil -> nil
+      binary -> Proc.which(binary)
+    end
   end
 
   # ── Helpers ──────────────────────────────────────────────────────────
@@ -129,4 +131,5 @@ defmodule Apero.Packages do
   defp manager_binary(:choco), do: "choco"
   defp manager_binary(:port), do: "port"
   defp manager_binary(:nix), do: "nix"
+  defp manager_binary(_), do: nil
 end
