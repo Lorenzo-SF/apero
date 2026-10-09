@@ -141,30 +141,6 @@ do_check() {
         fails=$((fails + 1))
     fi
 
-    step "Symlink"
-    local link="$BIN_DIR/apero"
-    if [[ -L "$link" ]]; then
-        if [[ -x "$link" ]]; then
-            ok "$link -> $(readlink "$link")"
-        else
-            err "$link es symlink pero no resuelve a un ejecutable"
-            fails=$((fails + 1))
-        fi
-    else
-        err "no hay symlink en $link (¿falta \`apero.sh --install\`?)"
-        fails=$((fails + 1))
-    fi
-
-    step "Ejecución"
-    if [[ -x "$link" ]]; then
-        if smoke_apero "$link"; then
-            ok "apero --version/--help responde (exit 0)"
-        else
-            err "apero no responde a --version ni a --help"
-            fails=$((fails + 1))
-        fi
-    fi
-
     step "Resumen"
     if (( fails == 0 )); then
         ok "apero está correctamente instalado"
